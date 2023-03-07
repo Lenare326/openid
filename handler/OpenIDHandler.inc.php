@@ -42,6 +42,9 @@ import('classes.handler.Handler');
 class OpenIDHandler extends Handler
 {
 
+	// _plugin and _contextId are solely used to get the OrcidProfilePlugin Status later
+	var $_plugin;
+	var $_contextId;
 
 	function doMicrosoftAuthentication($args, $request)
 	{
@@ -64,7 +67,17 @@ class OpenIDHandler extends Handler
 	 * @return bool
 	 */
 	function doAuthentication($args, $request, $provider = null)
-	{
+	{	
+		/* Get status of the Orcid Profile Plugin
+		*/
+		$this->_plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
+		$this->_contextId = $this->_plugin->getCurrentContextId();
+
+		$orcidPluginEnabled = $this->orcidEnabled();
+		error_log("Orcid Plugin enabled: $orcidPluginEnabled");
+		// END get status of Orcid Profile Plugin
+		
+		
 		$context = $request->getContext();
 		$plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$contextId = ($context == null) ? 0 : $context->getId();
@@ -72,6 +85,8 @@ class OpenIDHandler extends Handler
 		$selectedProvider = $provider == null ? $request->getUserVar('provider') : $provider;
 		$token = $this->_getTokenViaAuthCode($settings['provider'], $request->getUserVar('code'), $selectedProvider);
 		$publicKey = $this->_getOpenIDAuthenticationCert($settings['provider'], $selectedProvider);
+		
+		
 
 		if (isset($token) && isset($publicKey)) {
 			$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
@@ -450,5 +465,20 @@ class OpenIDHandler extends Handler
 		}
 
 		return $result;
+	}
+	
+	
+	/** Get the status of the Orcid Profile Plugin
+	* @return int isEnabled
+	*/
+	function orcidEnabled() {
+		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
+		$orcidPluginName = "OrcidProfilePlugin";
+		$settingName="enabled";
+		$context = $this->_plugin->getCurrentContextId();
+		
+		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
+		
+		return (int) $isEnabled; 
 	}
 }
