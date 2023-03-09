@@ -31,6 +31,7 @@ class OpenIDStep2Form extends Form
 	private $credentials;
 	private $plugin;
 	private $contextId;
+	
 
 	/**
 	 * OpenIDStep2Form constructor.
@@ -311,4 +312,19 @@ class OpenIDStep2Form extends Form
 
 		return $user;
 	}
+	
+		/** Get the status of the Orcid Profile Plugin
+	* @return int isEnabled
+	*/
+	function orcidEnabled() {
+		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
+		$orcidPluginName = "OrcidProfilePlugin";
+		$settingName="enabled";
+		$context = $this->_plugin->getCurrentContextId();
+		
+		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
+		
+		return (int) $isEnabled; 
+	}
+
 }

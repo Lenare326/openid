@@ -74,8 +74,9 @@ class OpenIDHandler extends Handler
 		$this->_contextId = $this->_plugin->getCurrentContextId();
 
 		$orcidPluginEnabled = $this->orcidEnabled();
-		error_log("Orcid Plugin enabled: $orcidPluginEnabled");
-		// END get status of Orcid Profile Plugin
+	
+		error_log("doAuthentication Orcid Plugin enabled: $orcidPluginEnabled");
+		//END get status of Orcid Profile Plugin
 		
 		
 		$context = $request->getContext();
@@ -90,6 +91,9 @@ class OpenIDHandler extends Handler
 
 		if (isset($token) && isset($publicKey)) {
 			$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
+			$access_token = $tokenPayload['access_token']; // TODO: can be removed if addOrcidPluginFields works
+			error_log("doAuthentication payload: $access_token");
+			
 			if (isset($tokenPayload) && is_array($tokenPayload)) {
 				$tokenPayload['selectedProvider'] = $selectedProvider;
 				$user = $this->_getUserViaKeycloakId($tokenPayload);
@@ -102,7 +106,11 @@ class OpenIDHandler extends Handler
 				} elseif (is_a($user, 'User') && !$user->getDisabled()) {
 					Validation::registerUserSession($user, $reason, true);
 
-					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider);
+					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
+					if($orcidPluginEnabled){
+						self::addOrcidPluginFields($user, $payload);
+					}
+					
 					if ($user->hasRole(
 						[ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_AUTHOR, ROLE_ID_REVIEWER, ROLE_ID_ASSISTANT],
 						$contextId
@@ -164,12 +172,13 @@ class OpenIDHandler extends Handler
 	}
 
 	public static function updateUserDetails($payload, $user, $request, $selectedProvider, $setProviderId = false)
-	{
+	{	
 		$userDao = DAORegistry::getDAO('UserDAO');
 		$context = $request->getContext();
 		$contextId = ($context == null) ? 0 : $context->getId();
 		$plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$settings = json_decode($plugin->getSetting($contextId, 'openIDSettings'), true);
+		
 
 		if (key_exists('providerSync', $settings) && $settings['providerSync'] == 1) {
 			$site = $request->getSite();
@@ -187,6 +196,7 @@ class OpenIDHandler extends Handler
 			if ($selectedProvider == 'orcid') {
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 					$user->setOrcid($payload['id']);
+					
 				}
 			}
 			$userDao->updateObject($user);
@@ -208,6 +218,7 @@ class OpenIDHandler extends Handler
 			}
 		}
 	}
+	
 
 
 	/**
@@ -399,8 +410,11 @@ class OpenIDHandler extends Handler
 	 * @return array|null
 	 */
 	private function _validateAndExtractToken(array $token, array $publicKeys)
-	{
+	{		
 		$credentials = null;
+		$access_token = isset($token['access_token']) ?  $token['access_token'] : null;
+		
+		
 		foreach ($publicKeys as $publicKey) {
 			foreach ($token as $t) {
 				try {
@@ -415,6 +429,8 @@ class OpenIDHandler extends Handler
 								'given_name' => property_exists($jwtPayload, 'given_name') ? $jwtPayload->given_name : null,
 								'family_name' => property_exists($jwtPayload, 'family_name') ? $jwtPayload->family_name : null,
 								'email_verified' => property_exists($jwtPayload, 'email_verified') ? $jwtPayload->email_verified : null,
+								'access_token' => $access_token,
+								
 							];
 						}
 						if (isset($credentials) && key_exists('id', $credentials) && !empty($credentials['id'])) {
@@ -427,6 +443,9 @@ class OpenIDHandler extends Handler
 			}
 		}
 
+		$test = $credentials['access_token'];
+		error_log("validateAndExtract token: $test");
+		
 		return $credentials;
 	}
 
@@ -480,5 +499,30 @@ class OpenIDHandler extends Handler
 		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
 		
 		return (int) $isEnabled; 
+	}
+	
+	
+	/**
+	* sets access_token and scope
+	* use only if Orcid Profile Plugin is enabled
+	*/
+	public static function addOrcidPluginFields($user, $payload){
+		$userAccessToken = null;
+		try {
+			$userAccessToken = $payload['access_token'];
+		}
+		catch (Exception $e) {
+			$userAccessToken = null;
+			error_log("No acccess token found.");
+		}
+		
+		if(!empty($userAccessToken)) {
+			$userOrcidScope = "/activities/update"; // TODO: this could be in a config file
+			
+			$user->setData('orcidAccessToken', $userAccessToken);
+			$user->setData('orcidAccessScope', $userOrcidScope);
+			
+			error_log("added orcid plugin fields");
+		}
 	}
 }
