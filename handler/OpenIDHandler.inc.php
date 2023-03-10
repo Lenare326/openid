@@ -74,8 +74,7 @@ class OpenIDHandler extends Handler
 		$this->_contextId = $this->_plugin->getCurrentContextId();
 
 		$orcidPluginEnabled = $this->orcidEnabled();
-	
-		error_log("doAuthentication Orcid Plugin enabled: $orcidPluginEnabled");
+
 		//END get status of Orcid Profile Plugin
 		
 		
@@ -91,9 +90,7 @@ class OpenIDHandler extends Handler
 
 		if (isset($token) && isset($publicKey)) {
 			$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
-			$access_token = $tokenPayload['access_token']; // TODO: can be removed if addOrcidPluginFields works
-			error_log("doAuthentication payload: $access_token");
-			
+
 			if (isset($tokenPayload) && is_array($tokenPayload)) {
 				$tokenPayload['selectedProvider'] = $selectedProvider;
 				$user = $this->_getUserViaKeycloakId($tokenPayload);
@@ -108,7 +105,7 @@ class OpenIDHandler extends Handler
 
 					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
 					if($orcidPluginEnabled){
-						self::addOrcidPluginFields($user, $payload);
+						self::addOrcidPluginFields($user, $tokenPayload);
 					}
 					
 					if ($user->hasRole(
@@ -134,6 +131,7 @@ class OpenIDHandler extends Handler
 		}
 
 		return $request->redirect($context, 'login', null, null, isset($ssoErrors) ? $ssoErrors : null);
+
 	}
 
 
@@ -179,6 +177,8 @@ class OpenIDHandler extends Handler
 		$plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$settings = json_decode($plugin->getSetting($contextId, 'openIDSettings'), true);
 		
+		// convert Orcid ID to URL format, needed for ORCID Profile Plugin
+		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
 
 		if (key_exists('providerSync', $settings) && $settings['providerSync'] == 1) {
 			$site = $request->getSite();
@@ -195,7 +195,8 @@ class OpenIDHandler extends Handler
 			}
 			if ($selectedProvider == 'orcid') {
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
-					$user->setOrcid($payload['id']);
+					//$user->setOrcid($payload['id']);
+					$user->setOrcid($orcidIdUrl);
 					
 				}
 			}
@@ -328,6 +329,8 @@ class OpenIDHandler extends Handler
 						if (is_array($result) && !empty($result) && key_exists('access_token', $result)) {
 							$token = [
 								'access_token' => $result['access_token'],
+								'scope' => key_exists('scope', $result) ? $result['scope'] : null,
+								'expires_in' => key_exists('expires_in', $result) ? $result['expires_in'] : null,
 								'id_token' => key_exists('id_token', $result) ? $result['id_token'] : null,
 								'refresh_token' => key_exists('refresh_token', $result) ? $result['refresh_token'] : null,
 							];
@@ -412,8 +415,11 @@ class OpenIDHandler extends Handler
 	private function _validateAndExtractToken(array $token, array $publicKeys)
 	{		
 		$credentials = null;
-		$access_token = isset($token['access_token']) ?  $token['access_token'] : null;
+		$userAccessToken = isset($token['access_token']) ?  $token['access_token'] : null;
 		
+		// add additional keys for Orid Provider to enable interoperability with Orcid Profile plugin
+		$userOrcidScope = isset($token['scope']) ?  $token['scope'] : null;
+		$accessTokenExpiration = isset($token['expires_in']) ?  $token['expires_in'] : null;
 		
 		foreach ($publicKeys as $publicKey) {
 			foreach ($token as $t) {
@@ -429,7 +435,9 @@ class OpenIDHandler extends Handler
 								'given_name' => property_exists($jwtPayload, 'given_name') ? $jwtPayload->given_name : null,
 								'family_name' => property_exists($jwtPayload, 'family_name') ? $jwtPayload->family_name : null,
 								'email_verified' => property_exists($jwtPayload, 'email_verified') ? $jwtPayload->email_verified : null,
-								'access_token' => $access_token,
+								'access_token' => $userAccessToken,
+								'scope' => $userOrcidScope,
+								'expires_in' => $accessTokenExpiration,
 								
 							];
 						}
@@ -443,9 +451,6 @@ class OpenIDHandler extends Handler
 			}
 		}
 
-		$test = $credentials['access_token'];
-		error_log("validateAndExtract token: $test");
-		
 		return $credentials;
 	}
 
@@ -498,31 +503,49 @@ class OpenIDHandler extends Handler
 		
 		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
 		
+		error_log("Orcid Plugin enabled: $isEnabled");
 		return (int) $isEnabled; 
 	}
 	
 	
 	/**
-	* sets access_token and scope
-	* use only if Orcid Profile Plugin is enabled
+	* additionally to Orcid ID (which is always set) stores access token, scope, and token expiration date
+	* used only if Orcid Profile Plugin is enabled
+	* adding these fields improves compatibility with Orcid Plugin functions
 	*/
 	public static function addOrcidPluginFields($user, $payload){
+		$userDao = DAORegistry::getDAO('UserDAO');
+		
 		$userAccessToken = null;
+		$userOrcidScope = null;
+		$accessTokenExpiration = null;
+		
 		try {
 			$userAccessToken = $payload['access_token'];
+			$userOrcidScope = $payload['scope'];
+			$accessTokenExpiration = $payload['expires_in'];	
 		}
 		catch (Exception $e) {
-			$userAccessToken = null;
 			error_log("No acccess token found.");
 		}
 		
-		if(!empty($userAccessToken)) {
-			$userOrcidScope = "/activities/update"; // TODO: this could be in a config file
+		if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
+			// convert expiration to date in format yyyy-mm-dd
+			$dateTooday=date('Y-m-d');
+			$accessTokenExpiration=Date('Y-m-d', strtotime('+'.$accessTokenExpiration. 'seconds'));
 			
 			$user->setData('orcidAccessToken', $userAccessToken);
 			$user->setData('orcidAccessScope', $userOrcidScope);
+			$user->setData('orcidAccessExpiresOn', $accessTokenExpiration); // expiration date needed by orcid plugin to push to record
+			//$user->setData('orcidAuthenticated', 1);
+			$userDao->updateObject($user); // this needs to be called, otherwise the data is not saved
 			
-			error_log("added orcid plugin fields");
+			error_log("Added orcid plugin fields");
+		}
+		
+		else {
+			error_log("OpenIDHandler could not save ORCID data. Fields empty!");
 		}
 	}
+	
 }

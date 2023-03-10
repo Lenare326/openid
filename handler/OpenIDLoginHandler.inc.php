@@ -103,7 +103,7 @@ class OpenIDLoginHandler extends Handler
 										'&redirect_uri='.urlencode(
 											$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
 										);
-								} 
+								}
 								
 								else {
 									$linkList[$name] = $settings['authUrl'].
@@ -284,4 +284,5 @@ class OpenIDLoginHandler extends Handler
 			)
 		);
 	}
+	
 }
