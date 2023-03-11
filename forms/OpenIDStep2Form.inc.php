@@ -87,12 +87,18 @@ class OpenIDStep2Form extends Form
 		if (is_array($this->credentials) && !empty($this->credentials)) {
 			// generate username if username is orchid id
 			if (key_exists('username', $this->credentials)) {
-				if (preg_match('/\d{4}-\d{4}-\d{4}-\d{4}/', $this->credentials['username'])) {
+				if (preg_match('/orcid\.org\/\d{4}-\d{4}-\d{4}-\d{4}/', $this->credentials['username'])) {
 					$given = key_exists('given_name', $this->credentials) ? $this->credentials['given_name'] : '';
 					$family = key_exists('family_name', $this->credentials) ? $this->credentials['family_name'] : '';
 					$this->credentials['username'] = mb_strtolower($given.$family, 'UTF-8');
 				}
 			}
+			
+			if ($this->credentials['selectedProvider'] == 'orcid'){
+				// convert Orcid ID to URL format, needed for ORCID Profile Plugin
+				$this->credentials['id'] = "https://sandbox.orcid.org/".$this->credentials['id'];
+			}
+			
 			$this->_data = array(
 				'selectedProvider' => $this->credentials['selectedProvider'],
 				'oauthId' => OpenIDHandler::encryptOrDecrypt($this->plugin, $this->contextId, 'encrypt', $this->credentials['id']),
@@ -100,6 +106,9 @@ class OpenIDStep2Form extends Form
 				'givenName' => $this->credentials['given_name'],
 				'familyName' => $this->credentials['family_name'],
 				'email' => $this->credentials['email'],
+				'accessToken' => key_exists('access_token', $this->credentials) ? $this->credentials['access_token'] : null,
+				'scope' => key_exists('scope', $this->credentials) ? $this->credentials['scope'] : null,
+				'expiresIn' => key_exists('expires_in', $this->credentials) ? $this->credentials['expires_in'] : null,
 				'userGroupIds' => array(),
 			);
 		}
@@ -119,6 +128,9 @@ class OpenIDStep2Form extends Form
 				'email',
 				'givenName',
 				'familyName',
+				'accessToken',
+				'scope',
+				'expiresIn',
 				'affiliation',
 				'country',
 				'privacyConsent',
@@ -244,10 +256,30 @@ class OpenIDStep2Form extends Form
 					}
 					if (isset($user) && Validation::verifyPassword($user->getUsername(), $password, $user->getPassword(), $rehash)) {
 						$result = true;
+						
+						// TODO: how to save token on first sign-in?!
+						$access_token = $this->getData('accessToken');
+						$scope = $this->getData('scope');
+						$expires_in = $this->getData('expiresIn');
+
+						if(($selectedProvider == 'orcid') && !empty($access_token) && !empty($scope) && !empty($expires_in)){
+							$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $access_token, 'string');
+							$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $scope, 'string');
+							$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $expires_in, 'string');
+						}
 					}
 				}
 				if ($result && isset($user)) {
 					OpenIDHandler::updateUserDetails(isset($payload) ? $payload : null, $user, Application::get()->getRequest(), $selectedProvider, true);
+					/*$access_token = $this->getData('accessToken');
+					$scope = $this->getData('scope');
+					$expires_in = $this->getData('expiresIn');
+
+					if(($selectedProvider == 'orcid') && !empty($access_token) && !empty($scope) && !empty($expires_in)){
+						$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $access_token, 'string');
+						$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $scope, 'string');
+						$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $expires_in, 'string');
+					}*/
 					Validation::registerUserSession($user, $reason, true);
 				}
 			}
@@ -266,6 +298,7 @@ class OpenIDStep2Form extends Form
 	private function _registerUser()
 	{
 		$userDao = DAORegistry::getDAO('UserDAO');
+		//$userSettingsDao = DAORegistry::getDAO('UserSettingsDAO');
 		$user = $userDao->newDataObject();
 		$user->setUsername($this->getData('username'));
 		$request = Application::get()->getRequest();
@@ -285,8 +318,20 @@ class OpenIDStep2Form extends Form
 		$user->setDateRegistered(Core::getCurrentDate());
 		$user->setInlineHelp(1);
 		$user->setPassword(Validation::encryptCredentials($this->getData('username'), openssl_random_pseudo_bytes(16)));
+		
+		
 		$userDao->insertObject($user);
 		if ($user->getId()) {
+
+			/*$access_token = $this->getData('accessToken');
+			$scope = $this->getData('scope');
+			$expires_in = $this->getData('expiresIn');
+
+			if(($selectedProvider == 'orcid') && !empty($access_token) && !empty($scope) && !empty($expires_in)){
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $access_token, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $scope, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $expires_in, 'string');
+			}*/
 
 			// Insert the user interests
 			import('lib.pkp.classes.user.InterestManager');
@@ -313,18 +358,5 @@ class OpenIDStep2Form extends Form
 		return $user;
 	}
 	
-		/** Get the status of the Orcid Profile Plugin
-	* @return int isEnabled
-	*/
-	function orcidEnabled() {
-		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
-		$orcidPluginName = "OrcidProfilePlugin";
-		$settingName="enabled";
-		$context = $this->_plugin->getCurrentContextId();
-		
-		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
-		
-		return (int) $isEnabled; 
-	}
 
 }

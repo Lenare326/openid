@@ -196,7 +196,7 @@ class OpenIDHandler extends Handler
 			if ($selectedProvider == 'orcid') {
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 					//$user->setOrcid($payload['id']);
-					$user->setOrcid($orcidIdUrl);
+					$user->setOrcid($payload['id']);
 					
 				}
 			}
