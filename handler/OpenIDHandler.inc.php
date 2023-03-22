@@ -73,7 +73,7 @@ class OpenIDHandler extends Handler
 		$this->_plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$this->_contextId = $this->_plugin->getCurrentContextId();
 
-		$orcidPluginEnabled = $this->orcidEnabled();
+		//$orcidPluginEnabled = $this->orcidEnabled();
 
 		//END get status of Orcid Profile Plugin
 		
@@ -93,9 +93,11 @@ class OpenIDHandler extends Handler
 
 			if (isset($tokenPayload) && is_array($tokenPayload)) {
 				$tokenPayload['selectedProvider'] = $selectedProvider;
+				
 				$user = $this->_getUserViaKeycloakId($tokenPayload);
 				if (!isset($user)) {
 					import($plugin->getPluginPath().'/forms/OpenIDStep2Form');
+					
 					$regForm = new OpenIDStep2Form($plugin, $tokenPayload);
 					$regForm->initData();
 
@@ -104,9 +106,9 @@ class OpenIDHandler extends Handler
 					Validation::registerUserSession($user, $reason, true);
 
 					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
-					if($orcidPluginEnabled){
-						self::addOrcidPluginFields($user, $tokenPayload);
-					}
+					//if($orcidPluginEnabled){
+						//self::addOrcidPluginFields($user, $tokenPayload);
+					//}
 					
 					if ($user->hasRole(
 						[ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_AUTHOR, ROLE_ID_REVIEWER, ROLE_ID_ASSISTANT],
@@ -194,9 +196,21 @@ class OpenIDHandler extends Handler
 				$user->setEmail($payload['email']);
 			}
 			if ($selectedProvider == 'orcid') {
+				
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 					//$user->setOrcid($payload['id']);
+<<<<<<< Updated upstream
 					$user->setOrcid($payload['id']);
+=======
+					$user->setOrcid($orcidIdUrl);
+
+					// save acces token, token expiration and scope only when the Orcid Plugin is enabled
+					$orcidPluginEnabled = self::orcidEnabled();
+					if($orcidPluginEnabled){
+						self::addOrcidPluginFields($user, $payload);
+					}
+					
+>>>>>>> Stashed changes
 					
 				}
 			}
@@ -418,8 +432,8 @@ class OpenIDHandler extends Handler
 		$userAccessToken = isset($token['access_token']) ?  $token['access_token'] : null;
 		
 		// add additional keys for Orid Provider to enable interoperability with Orcid Profile plugin
-		$userOrcidScope = isset($token['scope']) ?  $token['scope'] : null;
-		$accessTokenExpiration = isset($token['expires_in']) ?  $token['expires_in'] : null;
+		$userOrcidScope = isset($token['scope']) ? $token['scope'] : null;
+		$accessTokenExpiration = isset($token['expires_in']) ? $token['expires_in'] : null;
 		
 		foreach ($publicKeys as $publicKey) {
 			foreach ($token as $t) {
@@ -499,7 +513,10 @@ class OpenIDHandler extends Handler
 		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
 		$orcidPluginName = "OrcidProfilePlugin";
 		$settingName="enabled";
-		$context = $this->_plugin->getCurrentContextId();
+		
+		$_pluginTest = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
+		
+		$context = $_pluginTest->getCurrentContextId();
 		
 		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
 		

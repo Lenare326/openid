@@ -28,6 +28,9 @@
 		<input type="hidden" name="oauthId" id="oauthId" value="{$oauthId}">
 		<input type="hidden" name="selectedProvider" id="selectedProvider" value="{$selectedProvider}">
 		<input type="hidden" name="returnTo" id="returnTo" value="{$returnTo}">
+		<input type="hidden" name="accessToken" id="accessToken" value="{$accessToken}">
+		<input type="hidden" name="scope" id="scope" value="{$scope}">
+		<input type="hidden" name="expiresIn" id="expiresIn" value="{$expiresIn}">
 		{if empty($disableConnect) || $disableConnect != "1"}
 			<h1>
 				{translate key="plugins.generic.openid.step2.headline" journalName=$siteTitle|escape}

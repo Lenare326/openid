@@ -106,12 +106,18 @@ class OpenIDStep2Form extends Form
 				'givenName' => $this->credentials['given_name'],
 				'familyName' => $this->credentials['family_name'],
 				'email' => $this->credentials['email'],
+<<<<<<< Updated upstream
 				'accessToken' => key_exists('access_token', $this->credentials) ? $this->credentials['access_token'] : null,
 				'scope' => key_exists('scope', $this->credentials) ? $this->credentials['scope'] : null,
 				'expiresIn' => key_exists('expires_in', $this->credentials) ? $this->credentials['expires_in'] : null,
+=======
+				'accessToken' => $this->credentials['access_token'],
+				'scope' => $this->credentials['scope'],
+				'expiresIn' => $this->credentials['expires_in'],
+>>>>>>> Stashed changes
 				'userGroupIds' => array(),
 			);
-		}
+		}	
 	}
 
 	/**
@@ -142,6 +148,9 @@ class OpenIDStep2Form extends Form
 				'readerGroup',
 				'reviewerGroup',
 				'interests',
+				'accessToken',
+				'scope',
+				'expiresIn',
 			)
 		);
 		// Collect the specified user group IDs into a single piece of data
@@ -227,6 +236,10 @@ class OpenIDStep2Form extends Form
 		$oauthId = $this->getData('oauthId');
 		$selectedProvider = $this->getData('selectedProvider');
 		$result = false;
+		
+		$access_token = $this->getData('accessToken');
+		$scope = $this->getData('scope');
+		$expires_in = $this->getData('expiresIn');		
 
 		if (!empty($oauthId) && !empty($selectedProvider)) {
 			$oauthId = OpenIDHandler::encryptOrDecrypt($this->plugin, $this->contextId, 'decrypt', $oauthId);
@@ -241,13 +254,16 @@ class OpenIDStep2Form extends Form
 					if (isset($user)) {
 						if($selectedProvider == 'orcid')
 						{
-							$user->setOrcid($oauthId);
+							// convert Orcid ID to URL format, needed for ORCID Profile Plugin
+							$orcidIdUrl = "https://sandbox.orcid.org/".$oauthId;
+							$user->setOrcid($orcidIdUrl);
 						}
 						$userSettingsDao->updateSetting($user->getId(), 'openid::'.$selectedProvider, $oauthId, 'string');
 						$result = true;
 					}
 				} elseif ($connect) {
-					$payload = ['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId];
+					/*$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
+					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]); */
 					$username = $this->getData('usernameLogin');
 					$password = $this->getData('passwordLogin');
 					$user = $userDao->getByUsername($username, true);
@@ -270,6 +286,9 @@ class OpenIDStep2Form extends Form
 					}
 				}
 				if ($result && isset($user)) {
+					$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
+					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]);
+					
 					OpenIDHandler::updateUserDetails(isset($payload) ? $payload : null, $user, Application::get()->getRequest(), $selectedProvider, true);
 					/*$access_token = $this->getData('accessToken');
 					$scope = $this->getData('scope');
@@ -281,6 +300,7 @@ class OpenIDStep2Form extends Form
 						$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $expires_in, 'string');
 					}*/
 					Validation::registerUserSession($user, $reason, true);
+					
 				}
 			}
 		}
