@@ -42,10 +42,6 @@ import('classes.handler.Handler');
 class OpenIDHandler extends Handler
 {
 
-	// _plugin and _contextId are solely used to get the OrcidProfilePlugin Status later
-	var $_plugin;
-	var $_contextId;
-
 	function doMicrosoftAuthentication($args, $request)
 	{
 		return $this->doAuthentication($args, $request, 'microsoft');
@@ -68,16 +64,6 @@ class OpenIDHandler extends Handler
 	 */
 	function doAuthentication($args, $request, $provider = null)
 	{	
-		/* Get status of the Orcid Profile Plugin
-		*/
-		$this->_plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
-		$this->_contextId = $this->_plugin->getCurrentContextId();
-
-		//$orcidPluginEnabled = $this->orcidEnabled();
-
-		//END get status of Orcid Profile Plugin
-		
-		
 		$context = $request->getContext();
 		$plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$contextId = ($context == null) ? 0 : $context->getId();
@@ -106,10 +92,6 @@ class OpenIDHandler extends Handler
 					Validation::registerUserSession($user, $reason, true);
 
 					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
-					//if($orcidPluginEnabled){
-						//self::addOrcidPluginFields($user, $tokenPayload);
-					//}
-					
 					if ($user->hasRole(
 						[ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_AUTHOR, ROLE_ID_REVIEWER, ROLE_ID_ASSISTANT],
 						$contextId
@@ -179,8 +161,6 @@ class OpenIDHandler extends Handler
 		$plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
 		$settings = json_decode($plugin->getSetting($contextId, 'openIDSettings'), true);
 		
-		// convert Orcid ID to URL format, needed for ORCID Profile Plugin
-		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
 
 		if (key_exists('providerSync', $settings) && $settings['providerSync'] == 1) {
 			$site = $request->getSite();
@@ -198,20 +178,29 @@ class OpenIDHandler extends Handler
 			if ($selectedProvider == 'orcid') {
 				
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
-					//$user->setOrcid($payload['id']);
-<<<<<<< Updated upstream
-					$user->setOrcid($payload['id']);
-=======
-					$user->setOrcid($orcidIdUrl);
+					
+					// convert Orcid ID to URL format, recommended way of storing ORCID iDs
+					$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
 
 					// save acces token, token expiration and scope only when the Orcid Plugin is enabled
 					$orcidPluginEnabled = self::orcidEnabled();
-					if($orcidPluginEnabled){
+					if($orcidPluginEnabled){						
 						self::addOrcidPluginFields($user, $payload);
 					}
-					
->>>>>>> Stashed changes
-					
+					else{
+						//save the ORCID iD even if Orcid Plugin is not activated; only overwrite on change
+						$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
+						$username = $user->getData('username');
+						//save if no ORCID iD stored in DB, replace in case a new ORCID iD is connected
+						if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
+							$user->setOrcid($orcidIdUrl);
+						}
+						else{
+							error_log("Did not store ORCID iD for entry $username".". ORCID iD probably already set." );
+						}
+						 
+					}
+	
 				}
 			}
 			$userDao->updateObject($user);
@@ -514,9 +503,8 @@ class OpenIDHandler extends Handler
 		$orcidPluginName = "OrcidProfilePlugin";
 		$settingName="enabled";
 		
-		$_pluginTest = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
-		
-		$context = $_pluginTest->getCurrentContextId();
+		$_plugin = PluginRegistry::getPlugin('generic', KEYCLOAK_PLUGIN_NAME);
+		$context = $_plugin->getCurrentContextId();
 		
 		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
 		
@@ -526,7 +514,7 @@ class OpenIDHandler extends Handler
 	
 	
 	/**
-	* additionally to Orcid ID (which is always set) stores access token, scope, and token expiration date
+	* stores and handles orcid id, access token, scope, and token expiration date
 	* used only if Orcid Profile Plugin is enabled
 	* adding these fields improves compatibility with Orcid Plugin functions
 	*/
@@ -547,17 +535,41 @@ class OpenIDHandler extends Handler
 		}
 		
 		if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
-			// convert expiration to date in format yyyy-mm-dd
-			$dateTooday=date('Y-m-d');
+			// convert expiration date (delivered with oauth) to date in format yyyy-mm-dd
 			$accessTokenExpiration=Date('Y-m-d', strtotime('+'.$accessTokenExpiration. 'seconds'));
+
+			// try get stored token expiration date from DB for comparison
+			$storedExpDate = $user->getData('orcidAccessExpiresOn');
+			$accessExpiredDate = empty($storedExpDate) ? null : date_create($storedExpDate);
+			$today = date_create(date('Y-m-d'));
 			
-			$user->setData('orcidAccessToken', $userAccessToken);
-			$user->setData('orcidAccessScope', $userOrcidScope);
-			$user->setData('orcidAccessExpiresOn', $accessTokenExpiration); // expiration date needed by orcid plugin to push to record
-			//$user->setData('orcidAuthenticated', 1);
+			// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
+			$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
+			
+			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS
+			$newEntry = (empty($orcidStoredInDB) || empty($storedExpDate));
+			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate));
+
+			$username = $user->getData('username');
+			
+			if($newEntry || $overwriteEntry){
+				// add date if no orcid id was stored yet or if it was entered manually (in the latter case, the token expiration date should be empty)
+				$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
+				$user->setOrcid($orcidIdUrl);
+				$user->setData('orcidAccessToken', $userAccessToken);
+				$user->setData('orcidAccessScope', $userOrcidScope);
+				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration); // expiration date needed by orcid plugin to push to record
+				
+				
+				error_log("Orcid fields updated for entry $username");
+			}
+
+			else{
+				error_log("Already stored an ORCID iD with a valid token for $username, not overwriting.");
+			}
+
 			$userDao->updateObject($user); // this needs to be called, otherwise the data is not saved
 			
-			error_log("Added orcid plugin fields");
 		}
 		
 		else {
