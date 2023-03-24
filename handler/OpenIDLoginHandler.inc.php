@@ -94,18 +94,7 @@ class OpenIDLoginHandler extends Handler
 									$linkList[$name] = $settings['authUrl'].
 										'?client_id='.$settings['clientId'].
 										'&response_type=code&scope=openid profile email';
-								} 
-								
-								else if($name == 'orcid') {
-									$linkList[$name] = $settings['authUrl'].
-										'?client_id='.$settings['clientId'].
-										'&response_type=code&scope=openid /activities/update profile email'.
-										'&redirect_uri='.urlencode(
-											$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
-										);
-								} 
-								
-								else {
+								} else {
 									$linkList[$name] = $settings['authUrl'].
 										'?client_id='.$settings['clientId'].
 										'&response_type=code&scope=openid profile email'.
