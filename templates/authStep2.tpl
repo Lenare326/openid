@@ -157,52 +157,7 @@
 					</div>
 				</div>
 			</fieldset>
-			{* Allow the user to sign up as a reviewer *}
-			{if isset($currentContext) }
-			{assign var=contextId value=$currentContext->getId()}
-			{else}
-			{assign var=contextId value=0}
-			{/if}
-			{assign var=userCanRegisterReviewer value=0}
-			{foreach from=$reviewerUserGroups[$contextId] item=userGroup}
-				{if $userGroup->getPermitSelfRegistration()}
-					{assign var=userCanRegisterReviewer value=$userCanRegisterReviewer+1}
-				{/if}
-			{/foreach}
-			{if $userCanRegisterReviewer}
-				<fieldset class="reviewer">
-					{if $userCanRegisterReviewer > 1}
-						<legend>
-							{translate key="user.reviewerPrompt"}
-						</legend>
-						{capture assign="checkboxLocaleKey"}user.reviewerPrompt.userGroup{/capture}
-					{else}
-						{capture assign="checkboxLocaleKey"}user.reviewerPrompt.optin{/capture}
-					{/if}
-					<div class="fields">
-						<div id="reviewerOptinGroup" class="optin">
-							{foreach from=$reviewerUserGroups[$contextId] item=userGroup}
-								{if $userGroup->getPermitSelfRegistration()}
-									<label>
-										{assign var="userGroupId" value=$userGroup->getId()}
-										<input type="checkbox" name="reviewerGroup[{$userGroupId}]" class="reviewerGroupInput"
-										       value="1"{if in_array($userGroupId, $userGroupIds)} checked="checked"{/if}>
-										{translate key=$checkboxLocaleKey userGroup=$userGroup->getLocalizedName()}
-									</label>
-								{/if}
-							{/foreach}
-						</div>
-						<div id="reviewerInterests" class="reviewer_interests">
-							<label>
-								<span class="label">
-									{translate key="user.interests"}
-								</span>
-								<input type="text" name="interests" id="interests" value="{$interests|escape}" class="reviewerGroupInput">
-							</label>
-						</div>
-					</div>
-				</fieldset>
-			{/if}
+			
 			<div class="buttons">
 				<button class="submit" type="submit" name="register">
 					{translate key="plugins.generic.openid.step2.complete.btn"}
