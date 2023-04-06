@@ -131,4 +131,16 @@
 		{/if}
 	</ul>
 </div><!-- .page -->
+
+{if  $shibbolethEnabled}
+
+<div id="additionalSignIn">
+	<h2>
+	Placeholder OpenID
+	</h2>
+	
+	<p> This is a space for another login option </p>
+</div>		
+
+{/if}
 {include file="frontend/components/footer.tpl"}

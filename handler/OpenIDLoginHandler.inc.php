@@ -67,16 +67,7 @@ class OpenIDLoginHandler extends Handler
 					foreach ($providerList as $name => $settings) {
 						if (key_exists('authUrl', $settings) && !empty($settings['authUrl'])
 							&& key_exists('clientId', $settings) && !empty($settings['clientId'])) {
-							if (sizeof($providerList) == 1 && !$legacyLogin && !$legacyRegister) {
-								$request->redirectUrl(
-									$settings['authUrl'].
-									'?client_id='.$settings['clientId'].
-									'&response_type=code&scope=openid&redirect_uri='.
-									$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
-								);
 
-								return false;
-							} else {
 								if ($name == "custom") {
 									$templateMgr->assign(
 										'customBtnImg',
@@ -113,7 +104,7 @@ class OpenIDLoginHandler extends Handler
 											$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
 										);
 								}
-							}
+							
 						}
 					}
 				}
@@ -133,6 +124,9 @@ class OpenIDLoginHandler extends Handler
 				if ($legacyLogin) {
 					$this->_enableLegacyLogin($templateMgr, $request);
 				}
+				
+				// assign the status of the ShibbolethAuthPlugin
+				$templateMgr->assign('shibbolethEnabled', $this->_sitewidePluginEnabled('ShibbolethAuthPlugin'));
 			} else {
 				$templateMgr->assign('openidError', true);
 				$templateMgr->assign('errorMsg', 'plugins.generic.openid.settings.error');
@@ -283,6 +277,16 @@ class OpenIDLoginHandler extends Handler
 				'journalName' => $context != null ? $context->getName(AppLocale::getLocale()) : null,
 			)
 		);
+	}
+	
+	
+		function _sitewidePluginEnabled($pluginName) {
+		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
+		$settingName="enabled";
+		$isEnabled = $pluginSettingsDao->getSetting(CONTEXT_SITE, $pluginName, $settingName);
+		
+		error_log("$pluginName Plugin enabled: $isEnabled");
+		return (int) $isEnabled; 
 	}
 	
 }
