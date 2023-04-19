@@ -129,6 +129,48 @@ msgstr "Apple ID"
 msgid "plugins.generic.openid.settings.apple.desc"
 msgstr "<a href='https://developer.apple.com/documentation/authenticationservices' target='_blank' rel='noopener'>Hier</a> erfahren Sie, wie Sie die Apple ID konfigurieren. Bitte verwenden Sie diese Redirect-URL:"
 
+msgid "plugins.generic.openid.settings.shibboleth.enable"
+msgstr "Shibboleth"
+
+msgid "plugins.generic.openid.settings.shibboleth.desc"
+msgstr "Sie müssen einen lokalen Service Provider (SP) eingerichtet und konfiguriert haben."
+
+msgid "plugins.generic.openid.settings.shibbolethWayfUrl"
+msgstr "Shibboleth SP Pfad. Dies kann ein absoluter URL (z.B. https://example.com/Shibboleth.sso/Login), absoluter Pfad (z.B. /Shibboleth/Login), oder relativer Pfad (z.B. Shibboleth.sso/Login) sein."
+
+msgid "plugins.generic.openid.settings.shibbolethWayfUrlRequired"
+msgstr "Bitte geben Sie den Pfad des Shibboleth SP auf diesem Server an (z.B. Shibboleth.sso/Login)"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderUin"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth UIN Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderUinRequired"
+msgstr "Bitte geben Sie den HTTP Header des Shibboleth UIN Attributes an."
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderOrcid"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth ORCID iD Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderAccessToken"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth Access Token Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderFirstName"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth Vornamen Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderFirstNameRequired"
+msgstr "Bitte geben Sie den HTTP Header des Shibboleth Vornamen Attributes an."
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderLastName"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth Nachnamen Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderLastNameRequired"
+msgstr "Bitte geben Sie den HTTP Header des Shibboleth Nachnamen Attributes an."
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderEmail"
+msgstr "HTTP Header ($_SERVER Umgebungsvariablenschlüssel) des Shibboleth E-Mail Attributes"
+
+msgid "plugins.generic.openid.settings.shibbolethHeaderEmailRequired"
+msgstr "Bitte geben Sie den HTTP Header des Shibboleth E-Mail Attributes an."
+
 msgid "plugins.generic.openid.settings.configUrl"
 msgstr "OpenID Provider URL"
 
@@ -154,13 +196,19 @@ msgid "plugins.generic.openid.settings.features.desc"
 msgstr "Die folgenden Felder sind optional. Sie sind nicht erforderlich, um eine Verknüpfung mit einem OpenID-Anbieter herzustellen."
 
 msgid "plugins.generic.openid.settings.legacyLogin"
-msgstr "Default OJS Login"
+msgstr "Standard OJS Login"
 
 msgid "plugins.generic.openid.settings.legacyLogin.check"
-msgstr "Default OJS Login aktivieren"
+msgstr "Standard OJS Login aktivieren"
 
 msgid "plugins.generic.openid.settings.legacyLogin.desc"
 msgstr "Aktivieren Sie diese Option, wenn Sie möchten, dass sich die Benutzer zusätzlich zur OpenID-Anmeldung auch mit dem default Anmeldeformular der Anwendung registrieren und anmelden können."
+
+msgid "plugins.generic.openid.settings.legacyRegister.check"
+msgstr "Standard OJS Registrierung aktivieren"
+
+msgid "plugins.generic.openid.settings.legacyRegister.desc"
+msgstr "Aktivieren Sie diese Option, wenn Sie möchten, dass sich Benutzer zusätzlich zur OpenID-Anmeldung auch über das Registrierungsformular der Anwendung registrieren können."
 
 msgid "plugins.generic.openid.settings.step2.connect"
 msgstr "Account-Verknüpfung"

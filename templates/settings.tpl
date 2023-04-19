@@ -84,6 +84,7 @@
 	enctype="multipart/form-data"
 	action="{url router=$smarty.const.ROUTE_COMPONENT op="manage" category="generic" plugin=$pluginName verb="settings" save=true}">
 	{csrf}
+	{include file="controllers/notification/inPlaceNotification.tpl" notificationId="shibSettingsFormNotification"}
 	{fbvFormArea title="plugins.generic.openid.settings.openid.head" id="open-id-provider"}
 		<p>{translate key="plugins.generic.openid.settings.openid.desc"}</p>
 		{foreach from=$initProvider item=settings key=name}
@@ -92,7 +93,9 @@
 					{fbvElement type="checkbox" id="provider[{$name}][active]" checked=$provider[{$name}]['active']  value=1 label="plugins.generic.openid.settings.{$name}.enable" class="strong"}
 					<div class="hiddenContent">
 						{assign var='providerSuffix' value="?provider="|cat:$name}
+						{if $name ne 'shibboleth'}
 						<p>{translate key="plugins.generic.openid.settings.{$name}.desc"}&nbsp;<strong>{if $name == 'microsoft'}{$redirectMSUrl|escape}{else}{$redirectUrl|escape}{$providerSuffix}{/if}</strong></p>
+						{/if}
 						{if $name eq 'custom'}
 							{fbvElement type="text" id="provider[{$name}][configUrl]" value=$provider[{$name}]['configUrl'] maxlength="250" label="plugins.generic.openid.settings.configUrl.desc"}
 							<div style="clear: both;">&nbsp;</div>
@@ -102,14 +105,26 @@
 								{fbvElement type="text" id="provider[{$name}][btnTxt]" value=$provider[{$name}]['btnTxt'] maxlength="40" label="plugins.generic.openid.settings.btnTxt.desc" inline=true size=$fbvStyles.size.MEDIUM multilingual=true}
 							</div>
 							<div style="clear: both;">&nbsp;</div>
+						{else if $name eq 'shibboleth'}
+							
+						{fbvElement id="shibbolethWayfUrlSetting" type="text" name="shibbolethWayfUrl" value=$shibbolethWayfUrl label="plugins.generic.openid.settings.shibbolethWayfUrl" required="true"}
+						{fbvElement id="shibbolethHeaderUinSetting" type="text" name="shibbolethHeaderUin" value=$shibbolethHeaderUin label="plugins.generic.openid.settings.shibbolethHeaderUin" required="true"}
+						{fbvElement id="shibbolethHeaderOrcidSetting" type="text" name="shibbolethHeaderOrcid" value=$shibbolethHeaderOrcid label="plugins.generic.openid.settings.shibbolethHeaderOrcid"}
+						{fbvElement id="shibbolethHeaderAccessTokenSetting" type="text" name="shibbolethHeaderAccessToken" value=$shibbolethHeaderAccessToken label="plugins.generic.openid.settings.shibbolethHeaderAccessToken"}
+						{fbvElement id="shibbolethHeaderFirstNameSetting" type="text" name="shibbolethHeaderFirstName" value=$shibbolethHeaderFirstName label="plugins.generic.openid.settings.shibbolethHeaderFirstName" required="true"}
+						{fbvElement id="shibbolethHeaderLastNameSetting" type="text" name="shibbolethHeaderLastName" value=$shibbolethHeaderLastName label="plugins.generic.openid.settings.shibbolethHeaderLastName" required="true"}
+						{fbvElement id="shibbolethHeaderEmailSetting" type="text" name="shibbolethHeaderEmail" value=$shibbolethHeaderEmail label="plugins.generic.openid.settings.shibbolethHeaderEmail" required="true"}
+
 						{else}
 							{fbvElement type="hidden" id="provider[{$name}][configUrl]" value=$settings['configUrl'] }
 						{/if}
+						{if $name ne 'shibboleth'}
 						<div>
 							<div><strong>{translate key="plugins.generic.openid.settings.provider.settings"}</strong></div>
 							{fbvElement type="text" id="provider[{$name}][clientId]" value=$provider[{$name}]['clientId'] maxlength="250" label="plugins.generic.openid.settings.clientId.desc" inline=true size=$fbvStyles.size.MEDIUM}
 							{fbvElement type="text" id="provider[{$name}][clientSecret]" value=$provider[{$name}]['clientSecret'] maxlength="250" label="plugins.generic.openid.settings.clientSecret.desc" inline=true size=$fbvStyles.size.MEDIUM}
 						</div>
+						{/if}
 					</div>
 				{/fbvFormSection}
 			</div>

@@ -36,6 +36,7 @@ class OpenIDPluginSettingsForm extends Form
 		"google" => ["configUrl" => "https://accounts.google.com/.well-known/openid-configuration"],
 		"microsoft" => ["configUrl" => "https://login.windows.net/common/v2.0/.well-known/openid-configuration"],
 		"apple" => ["configUrl" => "https://appleid.apple.com/.well-known/openid-configuration"],
+		"shibboleth" => "",
 	];
 
 	private const HIDDEN_CHARS = '******';
