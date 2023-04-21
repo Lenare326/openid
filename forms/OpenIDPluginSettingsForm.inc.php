@@ -80,25 +80,6 @@ class OpenIDPluginSettingsForm extends Form
 			}
 		}
 		
-		/*$settLength = count($settings);
-		$provLength = count($provider);
-		$settKeys = array_keys($settings);
-		$provKeysO = array_keys($provider['orcid']);
-		$provKeys = array_keys($provider['shibboleth']);
-		
-		
-		foreach($provKeys as $kp){
-			$p = $provider['shibboleth'];
-			$test = $p[$kp];
-			error_log("Shib Arr $kp: $test");
-		}
-		
-		foreach($provKeysO as $kO){
-			$o = $provider['orcid'];
-			$testO = $o[$kO];
-			error_log("Orc Arr $kO: $testO");
-		}*/
-
 		
 		if (isset($settings)) {
 			$this->_data = array(
@@ -235,7 +216,7 @@ class OpenIDPluginSettingsForm extends Form
 						if($name == 'shibboleth'){
 							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
 							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
-							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
+							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethHeaderUin'] : 'xxx';
 							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $providerDB) ? $providerDB['shibbolethHeaderOrcid'] : 'xxx';
 							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $providerDB) ? $providerDB['shibbolethHeaderAccessToken'] : 'xxx';
 							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $providerDB) ? $providerDB['shibbolethHeaderFirstName'] : 'xxx';

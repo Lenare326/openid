@@ -100,33 +100,33 @@ class OpenIDHandler extends Handler
 			
 			
 			// check for required headers
-			if (!isset($_SERVER[$uinHeader])) {
+			if (!isset($_SERVER[$orcidHeader])) {
 			error_log(
-				"Shibboleth provider enabled, but not properly configured; failed to find $uinHeader"
+				"Shibboleth provider enabled, but not properly configured; failed to find $orcidHeader"
 			);
 			Validation::logout();
 			Validation::redirectLogin();
 			return false;
 			}
 			
-			$uin = $_SERVER[$uinHeader];
+			//$uin = $_SERVER[$uinHeader];
 			$userEmail = $_SERVER[$emailHeader];
 			$userGivenName = $_SERVER[$givenNameHeader];
 			$userFamilyName = $_SERVER[$familyNameHeader];
-			$userOrcid = $_SERVER[$orcidHeader];
+			$userOrcidUrl = $_SERVER[$orcidHeader];
+			$userOrcidNum =  explode('/', $userOrcidUrl);
 			
 			$tokenPayload = [
 				'selectedProvider' => $selectedProvider,
-				'id' => isset($uin) ? $uin : null,
+				'id' => isset($userOrcidNum) ? end($userOrcidNum) : null,
 				'email' => isset($userEmail) ? $userEmail : null,
 				'username' => null,
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
-				'orcidViaShib' => isset($userOrcid) ? $userOrcid : null,
-				'access_token' => '',
-				'scope' => '',
-				'expires_in' => '',
+				'access_token' => 'placeholderAccessToken',
+				'scope' => 'placeholderScope',
+				'expires_in' => ' 631139040',
 			];
 			
 			
@@ -165,49 +165,6 @@ class OpenIDHandler extends Handler
 			}
 		}
 		
-		
-		
-		/*************
-		if (isset($token) && isset($publicKey)) {
-			$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
-
-			if (isset($tokenPayload) && is_array($tokenPayload)) {
-				$tokenPayload['selectedProvider'] = $selectedProvider;
-				
-				$user = $this->_getUserViaKeycloakId($tokenPayload);
-				if (!isset($user)) {
-					import($plugin->getPluginPath().'/forms/OpenIDStep2Form');
-					
-					$regForm = new OpenIDStep2Form($plugin, $tokenPayload);
-					$regForm->initData();
-
-					return $regForm->fetch($request, null, true);
-				} elseif (is_a($user, 'User') && !$user->getDisabled()) {
-					Validation::registerUserSession($user, $reason, true);
-
-					self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
-					if ($user->hasRole(
-						[ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_AUTHOR, ROLE_ID_REVIEWER, ROLE_ID_ASSISTANT],
-						$contextId
-					)) {
-						return $request->redirect($context, 'submissions');
-					} else {
-						return $request->redirect($context, 'user', 'profile', null, $args);
-					}
-				} elseif ($user->getDisabled()) {
-					$reason = $user->getDisabledReason();
-					$ssoErrors['sso_error'] = 'disabled';
-					if ($reason != null) {
-						$ssoErrors['sso_error_msg'] = $reason;
-					}
-				}
-			} else {
-				$ssoErrors['sso_error'] = 'cert';
-			}
-		} else {
-			$ssoErrors['sso_error'] = !isset($publicKey) ? 'connect_key' : 'connect_data';
-		}
-		*****/
 		return $request->redirect($context, 'login', null, null, isset($ssoErrors) ? $ssoErrors : null);
 
 	}
@@ -269,7 +226,7 @@ class OpenIDHandler extends Handler
 			if (is_array($payload) && key_exists('email', $payload) && !empty($payload['email']) && $userDao->getUserByEmail($payload['email']) == null) {
 				$user->setEmail($payload['email']);
 			}
-			if ($selectedProvider == 'orcid') {
+			if ($selectedProvider == 'orcid' || $selectedProvider == 'shibboleth') {
 				
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 					
