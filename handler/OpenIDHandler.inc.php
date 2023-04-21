@@ -69,11 +69,105 @@ class OpenIDHandler extends Handler
 		$contextId = ($context == null) ? 0 : $context->getId();
 		$settings = json_decode($plugin->getSetting($contextId, 'openIDSettings'), true);
 		$selectedProvider = $provider == null ? $request->getUserVar('provider') : $provider;
-		$token = $this->_getTokenViaAuthCode($settings['provider'], $request->getUserVar('code'), $selectedProvider);
-		$publicKey = $this->_getOpenIDAuthenticationCert($settings['provider'], $selectedProvider);
 		
+		// prepare token payload if NOT shib
+		if($selectedProvider != 'shibboleth'){
+			$token = $this->_getTokenViaAuthCode($settings['provider'], $request->getUserVar('code'), $selectedProvider);
+			$publicKey = $this->_getOpenIDAuthenticationCert($settings['provider'], $selectedProvider);
+			
+			if (isset($token) && isset($publicKey)) {
+				$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
+
+				if (isset($tokenPayload) && is_array($tokenPayload)) {
+					$tokenPayload['selectedProvider'] = $selectedProvider;
+				} 
+			} 
+			else {
+				$ssoErrors['sso_error'] = !isset($publicKey) ? 'connect_key' : 'connect_data';
+			}
+		}
+		
+		// prepare token payload if provider is SHIB
+		else if($selectedProvider == 'shibboleth'){
+			$tmpProviderList = $settings['provider'];
+			$shibProviderSettings =  $tmpProviderList['shibboleth'];
+			
+			$uinHeader = $shibProviderSettings['shibbolethHeaderUin'];
+			$emailHeader = $shibProviderSettings['shibbolethHeaderEmail'];
+			$givenNameHeader = $shibProviderSettings['shibbolethHeaderFirstName'];
+			$familyNameHeader = $shibProviderSettings['shibbolethHeaderLastName'];
+			$orcidHeader = $shibProviderSettings['shibbolethHeaderOrcid'];
+			
+			
+			// check for required headers
+			if (!isset($_SERVER[$uinHeader])) {
+			error_log(
+				"Shibboleth provider enabled, but not properly configured; failed to find $uinHeader"
+			);
+			Validation::logout();
+			Validation::redirectLogin();
+			return false;
+			}
+			
+			$uin = $_SERVER[$uinHeader];
+			$userEmail = $_SERVER[$emailHeader];
+			$userGivenName = $_SERVER[$givenNameHeader];
+			$userFamilyName = $_SERVER[$familyNameHeader];
+			$userOrcid = $_SERVER[$orcidHeader];
+			
+			$tokenPayload = [
+				'selectedProvider' => $selectedProvider,
+				'id' => isset($uin) ? $uin : null,
+				'email' => isset($userEmail) ? $userEmail : null,
+				'username' => null,
+				'given_name' => isset($userGivenName) ? $userGivenName : null,
+				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
+				'email_verified' => null,
+				'orcidViaShib' => isset($userOrcid) ? $userOrcid : null,
+				'access_token' => '',
+				'scope' => '',
+				'expires_in' => '',
+			];
+			
+			
+		}
 		
 
+		$user = $this->_getUserViaKeycloakId($tokenPayload);
+		if (!isset($user)) {
+			import($plugin->getPluginPath().'/forms/OpenIDStep2Form');
+			
+			$regForm = new OpenIDStep2Form($plugin, $tokenPayload);
+			$regForm->initData();
+
+			return $regForm->fetch($request, null, true);
+		} 
+		
+		elseif (is_a($user, 'User') && !$user->getDisabled()) {
+			Validation::registerUserSession($user, $reason, true);
+
+			self::updateUserDetails($tokenPayload, $user, $request, $selectedProvider, false);
+			if ($user->hasRole(
+				[ROLE_ID_SITE_ADMIN, ROLE_ID_MANAGER, ROLE_ID_SUB_EDITOR, ROLE_ID_AUTHOR, ROLE_ID_REVIEWER, ROLE_ID_ASSISTANT],
+				$contextId
+			)) {
+				return $request->redirect($context, 'submissions');
+			} else {
+				return $request->redirect($context, 'user', 'profile', null, $args);
+			}
+		} 
+		
+		elseif ($user->getDisabled()) {
+			$reason = $user->getDisabledReason();
+			$ssoErrors['sso_error'] = 'disabled';
+			if ($reason != null) {
+				$ssoErrors['sso_error_msg'] = $reason;
+			}
+		}
+		
+		
+		
+		/*************
 		if (isset($token) && isset($publicKey)) {
 			$tokenPayload = $this->_validateAndExtractToken($token, $publicKey);
 
@@ -113,7 +207,7 @@ class OpenIDHandler extends Handler
 		} else {
 			$ssoErrors['sso_error'] = !isset($publicKey) ? 'connect_key' : 'connect_data';
 		}
-
+		*****/
 		return $request->redirect($context, 'login', null, null, isset($ssoErrors) ? $ssoErrors : null);
 
 	}
