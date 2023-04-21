@@ -36,7 +36,7 @@ class OpenIDPluginSettingsForm extends Form
 		"google" => ["configUrl" => "https://accounts.google.com/.well-known/openid-configuration"],
 		"microsoft" => ["configUrl" => "https://login.windows.net/common/v2.0/.well-known/openid-configuration"],
 		"apple" => ["configUrl" => "https://appleid.apple.com/.well-known/openid-configuration"],
-		"shibboleth" => "",
+		"shibboleth" => ["configUrl" => "test"],
 	];
 
 	private const HIDDEN_CHARS = '******';
@@ -74,9 +74,32 @@ class OpenIDPluginSettingsForm extends Form
 				}
 				if (key_exists('clientSecret', $prov) && !empty($prov['clientSecret'])) {
 					$prov['clientSecret'] = self::HIDDEN_CHARS;
+				}if (key_exists('shibbolethHeaderUin', $prov) && !empty($prov['shibbolethHeaderUin'])) {
+					$prov['shibbolethHeaderUin'] = $prov['shibbolethHeaderUin'];
 				}
 			}
 		}
+		
+		/*$settLength = count($settings);
+		$provLength = count($provider);
+		$settKeys = array_keys($settings);
+		$provKeysO = array_keys($provider['orcid']);
+		$provKeys = array_keys($provider['shibboleth']);
+		
+		
+		foreach($provKeys as $kp){
+			$p = $provider['shibboleth'];
+			$test = $p[$kp];
+			error_log("Shib Arr $kp: $test");
+		}
+		
+		foreach($provKeysO as $kO){
+			$o = $provider['orcid'];
+			$testO = $o[$kO];
+			error_log("Orc Arr $kO: $testO");
+		}*/
+
+		
 		if (isset($settings)) {
 			$this->_data = array(
 				'initProvider' => self::PUBLIC_OPENID_PROVIDER,
@@ -88,6 +111,7 @@ class OpenIDPluginSettingsForm extends Form
 				'generateAPIKey' => $settings['generateAPIKey'] ? $settings['generateAPIKey'] : 0,
 				'providerSync' => key_exists('providerSync', $settings) ? $settings['providerSync'] : false,
 				'disableFields' => $settings['disableFields'],
+				
 			);
 		} else {
 			$this->_data = array(
@@ -147,7 +171,9 @@ class OpenIDPluginSettingsForm extends Form
 		$contextId = ($request->getContext() == null) ? 0 : $request->getContext()->getId();
 		$settingsJson = $this->plugin->getSetting($contextId, 'openIDSettings');
 		$settingsTMP = json_decode($settingsJson, true);
+		
 		$providerList = $this->getData('provider');
+		
 		$providerListResult = $this->_createProviderList($providerList, $settingsTMP['provider']);
 		$settings = array(
 			'provider' => $providerListResult,
@@ -188,6 +214,7 @@ class OpenIDPluginSettingsForm extends Form
 				if (key_exists('active', $provider) && $provider['active'] == 1) {
 					if (isset($providerListDB) && is_array($providerListDB) && key_exists($name, $providerListDB)) {
 						$providerDB = $providerListDB[$name];
+						
 						if (key_exists('clientId', $provider) && key_exists('clientId', $providerDB) &&
 							(empty($provider['clientId']) || $provider['clientId'] == self::HIDDEN_CHARS)) {
 							if (!empty($providerDB['clientId'])) {
@@ -204,9 +231,25 @@ class OpenIDPluginSettingsForm extends Form
 								$provider['clientSecret'] = '';
 							}
 						}
+						
+						if($name == 'shibboleth'){
+							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
+							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
+							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
+							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $providerDB) ? $providerDB['shibbolethHeaderOrcid'] : 'xxx';
+							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $providerDB) ? $providerDB['shibbolethHeaderAccessToken'] : 'xxx';
+							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $providerDB) ? $providerDB['shibbolethHeaderFirstName'] : 'xxx';
+							$provider['shibbolethHeaderLastName'] = key_exists('shibbolethHeaderLastName', $providerDB) ? $providerDB['shibbolethHeaderLastName'] : 'xxx';
+							$provider['shibbolethHeaderEmail'] = key_exists('shibbolethHeaderEmail', $providerDB) ? $providerDB['shibbolethHeaderEmail'] : 'xxx';
+						}
 					}
-					$openIdConfig = $this->_loadOpenIdConfig($provider['configUrl']);
-					if (is_array($openIdConfig)
+
+					
+					if($name != 'shibboleth'){
+
+						$openIdConfig = $this->_loadOpenIdConfig($provider['configUrl']);
+						
+						if (is_array($openIdConfig)
 						&& key_exists('authorization_endpoint', $openIdConfig)
 						&& key_exists('token_endpoint', $openIdConfig)
 						&& key_exists('jwks_uri', $openIdConfig)) {
@@ -216,8 +259,12 @@ class OpenIDPluginSettingsForm extends Form
 						$provider['certUrl'] = $openIdConfig['jwks_uri'];
 						$provider['logoutUrl'] = key_exists('end_session_endpoint', $openIdConfig) ? $openIdConfig['end_session_endpoint'] : null;
 						$provider['revokeUrl'] = key_exists('revocation_endpoint', $openIdConfig) ? $openIdConfig['revocation_endpoint'] : null;
-						$providerListResult[$name] = $provider;
+					
+						}
+					
 					}
+					
+					$providerListResult[$name] = $provider;	
 				}
 			}
 		}

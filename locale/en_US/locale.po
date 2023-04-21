@@ -313,6 +313,9 @@ msgstr "Sign in with Microsoft"
 msgid "plugins.generic.openid.select.provider.apple"
 msgstr "Sign in with Apple"
 
+msgid "plugins.generic.openid.select.provider.shibboleth"
+msgstr "Sign in with Shibboleth"
+
 msgid "plugins.generic.openid.select.provider.legacyRegister"
 msgstr "Register Account (without Oauth)"
 

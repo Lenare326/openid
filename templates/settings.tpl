@@ -106,15 +106,17 @@
 							</div>
 							<div style="clear: both;">&nbsp;</div>
 						{else if $name eq 'shibboleth'}
-							
-						{fbvElement id="shibbolethWayfUrlSetting" type="text" name="shibbolethWayfUrl" value=$shibbolethWayfUrl label="plugins.generic.openid.settings.shibbolethWayfUrl" required="true"}
-						{fbvElement id="shibbolethHeaderUinSetting" type="text" name="shibbolethHeaderUin" value=$shibbolethHeaderUin label="plugins.generic.openid.settings.shibbolethHeaderUin" required="true"}
-						{fbvElement id="shibbolethHeaderOrcidSetting" type="text" name="shibbolethHeaderOrcid" value=$shibbolethHeaderOrcid label="plugins.generic.openid.settings.shibbolethHeaderOrcid"}
-						{fbvElement id="shibbolethHeaderAccessTokenSetting" type="text" name="shibbolethHeaderAccessToken" value=$shibbolethHeaderAccessToken label="plugins.generic.openid.settings.shibbolethHeaderAccessToken"}
-						{fbvElement id="shibbolethHeaderFirstNameSetting" type="text" name="shibbolethHeaderFirstName" value=$shibbolethHeaderFirstName label="plugins.generic.openid.settings.shibbolethHeaderFirstName" required="true"}
-						{fbvElement id="shibbolethHeaderLastNameSetting" type="text" name="shibbolethHeaderLastName" value=$shibbolethHeaderLastName label="plugins.generic.openid.settings.shibbolethHeaderLastName" required="true"}
-						{fbvElement id="shibbolethHeaderEmailSetting" type="text" name="shibbolethHeaderEmail" value=$shibbolethHeaderEmail label="plugins.generic.openid.settings.shibbolethHeaderEmail" required="true"}
+						<div>
+						{fbvElement type="hidden" id="provider[{$name}][configUrl]" value=$settings['configUrl'] }
+						{fbvElement id="provider[{$name}][shibbolethWayfUrl]" type="text" value=$provider[{$name}]['shibbolethWayfUrl'] label="plugins.generic.openid.settings.shibbolethWayfUrl" required="true"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderUin]" type="text" value=$provider[{$name}]['shibbolethHeaderUin'] label="plugins.generic.openid.settings.shibbolethHeaderUin" required="true"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderOrcid]" type="text" value=$provider[{$name}]['shibbolethHeaderOrcid'] label="plugins.generic.openid.settings.shibbolethHeaderOrcid"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderAccessToken]" type="text" value=$provider[{$name}]['shibbolethHeaderAccessToken'] label="plugins.generic.openid.settings.shibbolethHeaderAccessToken"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderFirstName]" type="text" value=$provider[{$name}]['shibbolethHeaderFirstName'] label="plugins.generic.openid.settings.shibbolethHeaderFirstName" required="true"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderLastName]" type="text" value=$provider[{$name}]['shibbolethHeaderLastName'] label="plugins.generic.openid.settings.shibbolethHeaderLastName" required="true"}
+						{fbvElement id="provider[{$name}][shibbolethHeaderEmail]" type="text" value=$provider[{$name}]['shibbolethHeaderEmail'] label="plugins.generic.openid.settings.shibbolethHeaderEmail" required="true"}
 
+						</div>
 						{else}
 							{fbvElement type="hidden" id="provider[{$name}][configUrl]" value=$settings['configUrl'] }
 						{/if}

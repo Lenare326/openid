@@ -65,8 +65,8 @@ class OpenIDLoginHandler extends Handler
 
 				if (isset($providerList)) {
 					foreach ($providerList as $name => $settings) {
-						if (key_exists('authUrl', $settings) && !empty($settings['authUrl'])
-							&& key_exists('clientId', $settings) && !empty($settings['clientId'])) {
+						if ((key_exists('authUrl', $settings) && !empty($settings['authUrl'])
+							&& key_exists('clientId', $settings) && !empty($settings['clientId'])) || ($name == 'shibboleth')) {
 
 								if ($name == "custom") {
 									$templateMgr->assign(
@@ -92,6 +92,12 @@ class OpenIDLoginHandler extends Handler
 										'?client_id='.$settings['clientId'].
 										'&response_type=code&scope=openid /activities/update'.
 										'&redirect_uri='.urlencode(
+											$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
+										);
+								}
+								else if($name == 'shibboleth') {
+									$linkList[$name] = $settings['shibbolethWayfUrl']. 
+									'?target='.urlencode(
 											$router->url($request, null, "openid", "doAuthentication", null, array('provider' => $name))
 										);
 								}
@@ -126,7 +132,7 @@ class OpenIDLoginHandler extends Handler
 				}
 				
 				// assign the status of the ShibbolethAuthPlugin
-				$templateMgr->assign('shibbolethEnabled', $this->_sitewidePluginEnabled('ShibbolethAuthPlugin'));
+				//$templateMgr->assign('shibbolethEnabled', $this->_sitewidePluginEnabled('ShibbolethAuthPlugin'));
 			} else {
 				$templateMgr->assign('openidError', true);
 				$templateMgr->assign('errorMsg', 'plugins.generic.openid.settings.error');

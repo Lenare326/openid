@@ -296,6 +296,9 @@ msgstr "Über Microsoft anmelden"
 msgid "plugins.generic.openid.select.provider.apple"
 msgstr "Über Apple anmelden"
 
+msgid "plugins.generic.openid.select.provider.shibboleth"
+msgstr "Über Shibboleth anmelden"
+
 msgid "plugins.generic.openid.select.provider.legacyRegister"
 msgstr "Ohne Oauth registrieren"
 
