@@ -141,8 +141,8 @@ class OpenIDHandler extends Handler
 			$userEmail = $_SERVER[$emailHeader];
 			$userGivenName = $_SERVER[$givenNameHeader];
 			$userFamilyName = $_SERVER[$familyNameHeader];
-			$userOrcidUrl = empty($orcidHeader) ? '' : $_SERVER[$orcidHeader];
-			$userAccessToken = empty($accessTokenHeader) ? '' : $_SERVER[$accessTokenHeader];
+			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : '';
+			$userAccessToken = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : '';
 			$userOrcidNum =  '';
 			
 			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
