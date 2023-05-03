@@ -74,8 +74,6 @@ class OpenIDPluginSettingsForm extends Form
 				}
 				if (key_exists('clientSecret', $prov) && !empty($prov['clientSecret'])) {
 					$prov['clientSecret'] = self::HIDDEN_CHARS;
-				}if (key_exists('shibbolethHeaderUin', $prov) && !empty($prov['shibbolethHeaderUin'])) {
-					$prov['shibbolethHeaderUin'] = $prov['shibbolethHeaderUin'];
 				}
 			}
 		}
@@ -214,18 +212,19 @@ class OpenIDPluginSettingsForm extends Form
 						}
 						
 						if($name == 'shibboleth'){
-							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
-							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : 'xxx';
-							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethHeaderUin'] : 'xxx';
-							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $providerDB) ? $providerDB['shibbolethHeaderOrcid'] : 'xxx';
-							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $providerDB) ? $providerDB['shibbolethHeaderAccessToken'] : 'xxx';
-							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $providerDB) ? $providerDB['shibbolethHeaderFirstName'] : 'xxx';
-							$provider['shibbolethHeaderLastName'] = key_exists('shibbolethHeaderLastName', $providerDB) ? $providerDB['shibbolethHeaderLastName'] : 'xxx';
-							$provider['shibbolethHeaderEmail'] = key_exists('shibbolethHeaderEmail', $providerDB) ? $providerDB['shibbolethHeaderEmail'] : 'xxx';
+							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : '';
+							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : '';
+							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethHeaderUin'] : '';
+							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $providerDB) ? $providerDB['shibbolethHeaderOrcid'] : '';
+							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $providerDB) ? $providerDB['shibbolethHeaderAccessToken'] : '';
+							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $providerDB) ? $providerDB['shibbolethHeaderFirstName'] : '';
+							$provider['shibbolethHeaderLastName'] = key_exists('shibbolethHeaderLastName', $providerDB) ? $providerDB['shibbolethHeaderLastName'] : '';
+							$provider['shibbolethHeaderEmail'] = key_exists('shibbolethHeaderEmail', $providerDB) ? $providerDB['shibbolethHeaderEmail'] : '';
 						}
 					}
 
 					
+					// get the openid config, not necessary for shibboleth
 					if($name != 'shibboleth'){
 
 						$openIdConfig = $this->_loadOpenIdConfig($provider['configUrl']);

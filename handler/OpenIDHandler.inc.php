@@ -97,28 +97,65 @@ class OpenIDHandler extends Handler
 			$givenNameHeader = $shibProviderSettings['shibbolethHeaderFirstName'];
 			$familyNameHeader = $shibProviderSettings['shibbolethHeaderLastName'];
 			$orcidHeader = $shibProviderSettings['shibbolethHeaderOrcid'];
+			$accessTokenHeader = $shibProviderSettings['shibbolethHeaderAccessToken'];
 			
 			
 			// check for required headers
-			if (!isset($_SERVER[$orcidHeader])) {
+			if (!isset($_SERVER[$uinHeader])) {
 			error_log(
-				"Shibboleth provider enabled, but not properly configured; failed to find $orcidHeader"
+				"Shibboleth provider enabled, but not properly configured; failed to find $uinHeader"
 			);
 			Validation::logout();
 			Validation::redirectLogin();
 			return false;
 			}
 			
-			//$uin = $_SERVER[$uinHeader];
+			if (!isset($_SERVER[$emailHeader])) {
+			error_log(
+				"Shibboleth provider enabled, but not properly configured; failed to find $emailHeader"
+			);
+			Validation::logout();
+			Validation::redirectLogin();
+			return false;
+			}
+			
+			if (!isset($_SERVER[$givenNameHeader])) {
+			error_log(
+				"Shibboleth provider enabled, but not properly configured; failed to find $givenNameHeader"
+			);
+			Validation::logout();
+			Validation::redirectLogin();
+			return false;
+			}
+			
+			if (!isset($_SERVER[$familyNameHeader])) {
+			error_log(
+				"Shibboleth provider enabled, but not properly configured; failed to find $familyNameHeader"
+			);
+			Validation::logout();
+			Validation::redirectLogin();
+			return false;
+			}
+					
+			$uin = $_SERVER[$uinHeader];
 			$userEmail = $_SERVER[$emailHeader];
 			$userGivenName = $_SERVER[$givenNameHeader];
 			$userFamilyName = $_SERVER[$familyNameHeader];
-			$userOrcidUrl = $_SERVER[$orcidHeader];
-			$userOrcidNum =  explode('/', $userOrcidUrl);
+			$userOrcidUrl = empty($orcidHeader) ? '' : $_SERVER[$orcidHeader];
+			$userAccessToken = empty($accessTokenHeader) ? '' : $_SERVER[$accessTokenHeader];
+			$userOrcidNum =  '';
 			
+			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
+			if(!empty($userOrcidUrl)){
+				$userOrcidNum =  explode('/', $userOrcidUrl);
+				$providerSettingsId = end($userOrcidNum);
+			}
+			
+			
+			// TODO replace the placeholders by values from userAccessToken
 			$tokenPayload = [
 				'selectedProvider' => $selectedProvider,
-				'id' => isset($userOrcidNum) ? end($userOrcidNum) : null,
+				'id' => $providerSettingsId,
 				'email' => isset($userEmail) ? $userEmail : null,
 				'username' => null,
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
@@ -232,7 +269,8 @@ class OpenIDHandler extends Handler
 		// update orcid fields (moved outside of 'providerSync' clause)
 		if ($selectedProvider == 'orcid' || $selectedProvider == 'shibboleth') {
 				
-				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
+				// only perform the below steps if payload['id'] is an ORCID iD
+				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id']) && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id'])) {
 					
 					// convert Orcid ID to URL format, recommended way of storing ORCID iDs
 					$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
@@ -484,7 +522,7 @@ class OpenIDHandler extends Handler
 		$credentials = null;
 		$userAccessToken = isset($token['access_token']) ?  $token['access_token'] : null;
 		
-		// add additional keys for Orid Provider to enable interoperability with Orcid Profile plugin
+		// add additional keys for Orcid Provider to enable interoperability with Orcid Profile plugin
 		$userOrcidScope = isset($token['scope']) ? $token['scope'] : null;
 		$accessTokenExpiration = isset($token['expires_in']) ? $token['expires_in'] : null;
 		
@@ -585,19 +623,10 @@ class OpenIDHandler extends Handler
 	public static function addOrcidPluginFields($user, $payload){
 		$userDao = DAORegistry::getDAO('UserDAO');
 		
-		$userAccessToken = null;
-		$userOrcidScope = null;
-		$accessTokenExpiration = null;
-		
-		try {
-			$userAccessToken = $payload['access_token'];
-			$userOrcidScope = $payload['scope'];
-			$accessTokenExpiration = $payload['expires_in'];	
-		}
-		catch (Exception $e) {
-			error_log("No acccess token found.");
-		}
-		
+		$userAccessToken = key_exists('access_token', $payload) ? $payload['access_token'] : null;
+		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
+		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
+	
 		if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
 			// convert expiration date (delivered with oauth) to date in format yyyy-mm-dd
 			$accessTokenExpiration=Date('Y-m-d', strtotime('+'.$accessTokenExpiration. 'seconds'));
@@ -637,7 +666,7 @@ class OpenIDHandler extends Handler
 		}
 		
 		else {
-			error_log("OpenIDHandler could not save ORCID data. Fields empty!");
+			error_log("OpenIDHandler could not save ORCID data. Fields empty! Check if Shibboleth Headers are set correctly.");
 		}
 	}
 	
