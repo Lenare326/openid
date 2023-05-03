@@ -226,34 +226,6 @@ class OpenIDHandler extends Handler
 			if (is_array($payload) && key_exists('email', $payload) && !empty($payload['email']) && $userDao->getUserByEmail($payload['email']) == null) {
 				$user->setEmail($payload['email']);
 			}
-			/*if ($selectedProvider == 'orcid' || $selectedProvider == 'shibboleth') {
-				
-				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
-					
-					// convert Orcid ID to URL format, recommended way of storing ORCID iDs
-					$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
-
-					// save acces token, token expiration and scope only when the Orcid Plugin is enabled
-					$orcidPluginEnabled = self::orcidEnabled();
-					if($orcidPluginEnabled){						
-						self::addOrcidPluginFields($user, $payload);
-					}
-					else{
-						//save the ORCID iD even if Orcid Plugin is not activated; only overwrite on change
-						$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
-						$username = $user->getData('username');
-						//save if no ORCID iD stored in DB, replace in case a new ORCID iD is connected
-						if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
-							$user->setOrcid($orcidIdUrl);
-						}
-						else{
-							error_log("Did not store ORCID iD for entry $username".". ORCID iD probably already set." );
-						}
-						 
-					}
-	
-				}
-			}*/
 			$userDao->updateObject($user);
 		}
 		
@@ -293,6 +265,17 @@ class OpenIDHandler extends Handler
 		if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 			if ($setProviderId) {
 				$userSettingsDao->updateSetting($user->getId(), 'openid::'.$selectedProvider, $payload['id'], 'string');
+				
+				// if Shibboleth and Orcid Provider are used at the same time, set the provider settings for both to avoid sign-up and login with two different ORCID iDs
+				// assure that the [id] is an Orcid ID and not UIN (UIN is used if Shib does not transfer ORCID iD as attribute)
+				$tmpProviderList = $settings['provider'];
+				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'shibboleth' && key_exists('orcid', $tmpProviderList)){
+					$userSettingsDao->updateSetting($user->getId(), 'openid::orcid', $payload['id'], 'string');
+				}
+				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'orcid' && key_exists('shibboleth', $tmpProviderList)){
+					$userSettingsDao->updateSetting($user->getId(), 'openid::shibboleth', $payload['id'], 'string');
+				}
+				
 			}
 			$generateApiKey = isset($settings) && key_exists('generateAPIKey', $settings) ? $settings['generateAPIKey'] : false;
 			$secret = Config::getVar('security', 'api_key_secret', '');
