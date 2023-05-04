@@ -154,7 +154,7 @@ msgid "plugins.generic.openid.settings.shibbolethWayfUrl"
 msgstr "Shibboleth SP path. This can be an absolute URL (e.g. https://example.com/Shibboleth.sso/Login), absolute path (e.g. /Shibboleth/Login), or a relative path (e.g. Shibboleth.sso/Login)."
 
 msgid "plugins.generic.openid.settings.shibbolethWayfUrlRequired"
-msgstr "Please enter the path of the Shibboleth wayfinder service on this server. (e.g. Shibboleth.sso/Login)"
+msgstr "Please enter the path of the Shibboleth wayfinder service on this server. (e.g. /Shibboleth.sso/Login)"
 
 msgid "plugins.generic.openid.settings.shibbolethHeaderUin"
 msgstr "HTTP Header ($_SERVER environment variable key) with Shibboleth UIN"

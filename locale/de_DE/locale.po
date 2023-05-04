@@ -136,7 +136,7 @@ msgid "plugins.generic.openid.settings.shibboleth.desc"
 msgstr "Sie müssen einen lokalen Service Provider (SP) eingerichtet und konfiguriert haben."
 
 msgid "plugins.generic.openid.settings.shibbolethWayfUrl"
-msgstr "Shibboleth SP Pfad. Dies kann ein absoluter URL (z.B. https://example.com/Shibboleth.sso/Login), absoluter Pfad (z.B. /Shibboleth/Login), oder relativer Pfad (z.B. Shibboleth.sso/Login) sein."
+msgstr "Shibboleth SP Pfad. Dies kann ein absoluter URL (z.B. https://example.com/Shibboleth.sso/Login), absoluter Pfad (z.B. /Shibboleth/Login), oder relativer Pfad (z.B. /Shibboleth.sso/Login) sein."
 
 msgid "plugins.generic.openid.settings.shibbolethWayfUrlRequired"
 msgstr "Bitte geben Sie den Pfad des Shibboleth SP auf diesem Server an (z.B. Shibboleth.sso/Login)"
