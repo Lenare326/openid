@@ -212,14 +212,15 @@ class OpenIDPluginSettingsForm extends Form
 						}
 						
 						if($name == 'shibboleth'){
-							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : '';
-							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $providerDB) ? $providerDB['shibbolethWayfUrl'] : '';
-							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $providerDB) ? $providerDB['shibbolethHeaderUin'] : '';
-							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $providerDB) ? $providerDB['shibbolethHeaderOrcid'] : '';
-							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $providerDB) ? $providerDB['shibbolethHeaderAccessToken'] : '';
-							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $providerDB) ? $providerDB['shibbolethHeaderFirstName'] : '';
-							$provider['shibbolethHeaderLastName'] = key_exists('shibbolethHeaderLastName', $providerDB) ? $providerDB['shibbolethHeaderLastName'] : '';
-							$provider['shibbolethHeaderEmail'] = key_exists('shibbolethHeaderEmail', $providerDB) ? $providerDB['shibbolethHeaderEmail'] : '';
+							// always update data from the settings form to catch changes
+							$provider['authUrl'] = key_exists('shibbolethWayfUrl', $provider)  ? $provider['shibbolethWayfUrl'] : '';
+							$provider['shibbolethWayfUrl'] = key_exists('shibbolethWayfUrl', $provider) ? $provider['shibbolethWayfUrl'] : '';
+							$provider['shibbolethHeaderUin'] = key_exists('shibbolethHeaderUin', $provider) ? $provider['shibbolethHeaderUin'] : '';
+							$provider['shibbolethHeaderOrcid'] = key_exists('shibbolethHeaderOrcid', $provider) ? $provider['shibbolethHeaderOrcid'] : '';
+							$provider['shibbolethHeaderAccessToken'] = key_exists('shibbolethHeaderAccessToken', $provider) ? $provider['shibbolethHeaderAccessToken'] : '';
+							$provider['shibbolethHeaderFirstName'] = key_exists('shibbolethHeaderFirstName', $provider) ? $provider['shibbolethHeaderFirstName'] : '';
+							$provider['shibbolethHeaderLastName'] = key_exists('shibbolethHeaderLastName', $provider) ? $provider['shibbolethHeaderLastName'] : '';
+							$provider['shibbolethHeaderEmail'] = key_exists('shibbolethHeaderEmail', $provider) ? $provider['shibbolethHeaderEmail'] : '';
 						}
 					}
 
