@@ -161,8 +161,8 @@ class OpenIDHandler extends Handler
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
-				'access_token' => 'placeholderAccessToken',
-				'scope' => 'placeholderScope',
+				'access_token' => null,
+				'scope' => 'null',
 				'expires_in' => ' 631139040',
 			];
 			
@@ -272,28 +272,8 @@ class OpenIDHandler extends Handler
 				// only perform the below steps if payload['id'] is an ORCID iD
 				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id']) && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id'])) {
 					
-					// convert Orcid ID to URL format, recommended way of storing ORCID iDs
-					$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
-
-					// save acces token, token expiration and scope only when the Orcid Plugin is enabled
-					$orcidPluginEnabled = self::orcidEnabled();
-					if($orcidPluginEnabled){						
+					// save orcid id, acces token, token expiration and scope (the latter 3 only if available)
 						self::addOrcidPluginFields($user, $payload);
-					}
-					else{
-						//save the ORCID iD even if Orcid Plugin is not activated; only overwrite on change
-						$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
-						$username = $user->getData('username');
-						//save if no ORCID iD stored in DB, replace in case a new ORCID iD is connected
-						if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
-							$user->setOrcid($orcidIdUrl);
-						}
-						else{
-							error_log("Did not store ORCID iD for entry $username".". ORCID iD probably already set." );
-						}
-						 
-					}
-	
 				}
 			}
 
@@ -622,10 +602,21 @@ class OpenIDHandler extends Handler
 	*/
 	public static function addOrcidPluginFields($user, $payload){
 		$userDao = DAORegistry::getDAO('UserDAO');
+		$userSettingsDao = DAORegistry::getDAO('UserSettingsDAO');
+		$username = $user->getData('username');
 		
 		$userAccessToken = key_exists('access_token', $payload) ? $payload['access_token'] : null;
 		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
 		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
+		
+		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
+		
+		// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
+		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
+		if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
+			$user->setOrcid($orcidIdUrl);
+			error_log("ORCID iD stored/updated for user $username.");
+		}
 	
 		if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
 			// convert expiration date (delivered with oauth) to date in format yyyy-mm-dd
@@ -636,29 +627,24 @@ class OpenIDHandler extends Handler
 			$accessExpiredDate = empty($storedExpDate) ? null : date_create($storedExpDate);
 			$today = date_create(date('Y-m-d'));
 			
-			// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
-			$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
-			
-			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS
+			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token)
 			$newEntry = (empty($orcidStoredInDB) || empty($storedExpDate));
-			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate));
+			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl));
 
-			$username = $user->getData('username');
-			
+
 			if($newEntry || $overwriteEntry){
-				// add date if no orcid id was stored yet or if it was entered manually (in the latter case, the token expiration date should be empty)
-				$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
-				$user->setOrcid($orcidIdUrl);
-				$user->setData('orcidAccessToken', $userAccessToken);
-				$user->setData('orcidAccessScope', $userOrcidScope);
-				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration); // expiration date needed by orcid plugin to push to record
 				
+				$user->setOrcid($orcidIdUrl);
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $userOrcidScope, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');
 				
 				error_log("Orcid fields updated for entry $username");
 			}
 
-			else{
-				error_log("Already stored an ORCID iD with a valid token for $username, not overwriting.");
+			else {
+				error_log("Already stored an ORCID iD with a valid token for user $username, not overwriting.");
 			}
 
 			$userDao->updateObject($user); // this needs to be called, otherwise the data is not saved
@@ -666,7 +652,7 @@ class OpenIDHandler extends Handler
 		}
 		
 		else {
-			error_log("OpenIDHandler could not save ORCID data. Fields empty! Check if Shibboleth Headers are set correctly.");
+			error_log("OpenIDHandler did not save additional ORCID data (token, scope, expiry). Fields empty! Check if Shibboleth Headers are set correctly. If this was intended, you can safely ignore this message.");
 		}
 	}
 	
