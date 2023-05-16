@@ -281,6 +281,9 @@ msgstr "Über meinen {$journalName} Account anmelden"
 msgid "plugins.generic.openid.select.provider.help"
 msgstr "Anmelden oder registrieren über:"
 
+msgid "plugins.generic.openid.select.provider.login.notification"
+msgstr Bitte entscheiden Sie sich für eine Login Methode und verwenden diese bei jedem weiteren Login!
+
 msgid "plugins.generic.openid.select.provider.custom"
 msgstr "Über benutzerdefinierten Provider anmelden"
 

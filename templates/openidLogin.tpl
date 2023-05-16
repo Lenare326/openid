@@ -99,6 +99,7 @@
 		{/if}
 		{if $linkList}
 			<li class="margin-top-30"><strong>{translate key='plugins.generic.openid.select.provider.help'}</strong></li>
+			<li class="margin-top-30 pk"><div class="loginNotification"><strong>{translate key='plugins.generic.openid.select.provider.login.notification'}</strong></div></li>
 			{foreach from=$linkList key=name item=url}
 				{if $name == 'custom'}
 					<li><a id="openid-provider-{$name}" href="{$url}">

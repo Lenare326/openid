@@ -298,6 +298,9 @@ msgstr "Sign in with your account at {$journalName}"
 msgid "plugins.generic.openid.select.provider.help"
 msgstr "Sign in or register with:"
 
+msgid "plugins.generic.openid.select.provider.login.notification"
+msgstr Please choose one login method and use it for every subsequent login!
+
 msgid "plugins.generic.openid.select.provider.custom"
 msgstr "Sign in with custom provider"
 

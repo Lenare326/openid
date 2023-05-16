@@ -116,3 +116,15 @@
 .page_oauth{
 	min-height: 65vh;
 }
+
+.loginNotification {
+  position: relative;
+  padding: .5rem .75rem;
+  background: #fff;
+  border: 1px solid #006798;
+  border-radius: 2px;
+  -webkit-box-shadow: inset .25rem 0 0 #006798;
+  box-shadow: inset .25rem 0 0 #006798;
+  font-size: .875rem;
+  line-height: 1.6em;
+}
