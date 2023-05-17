@@ -125,8 +125,6 @@ class OpenIDLoginHandler extends Handler
 					$this->_enableLegacyLogin($templateMgr, $request);
 				}
 				
-				// assign the status of the ShibbolethAuthPlugin
-				$templateMgr->assign('shibbolethEnabled', $this->_sitewidePluginEnabled('ShibbolethAuthPlugin'));
 			} else {
 				$templateMgr->assign('openidError', true);
 				$templateMgr->assign('errorMsg', 'plugins.generic.openid.settings.error');
@@ -279,14 +277,5 @@ class OpenIDLoginHandler extends Handler
 		);
 	}
 	
-	
-		function _sitewidePluginEnabled($pluginName) {
-		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
-		$settingName="enabled";
-		$isEnabled = $pluginSettingsDao->getSetting(CONTEXT_SITE, $pluginName, $settingName);
-		
-		error_log("$pluginName Plugin enabled: $isEnabled");
-		return (int) $isEnabled; 
-	}
 	
 }
