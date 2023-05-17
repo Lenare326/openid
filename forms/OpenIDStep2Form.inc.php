@@ -100,6 +100,7 @@ class OpenIDStep2Form extends Form
 				'givenName' => $this->credentials['given_name'],
 				'familyName' => $this->credentials['family_name'],
 				'email' => $this->credentials['email'],
+				'orcid' => $this->credentials['orcid'],
 				'accessToken' => $this->credentials['access_token'],
 				'scope' => $this->credentials['scope'],
 				'expiresIn' => $this->credentials['expires_in'],
@@ -133,6 +134,7 @@ class OpenIDStep2Form extends Form
 				'readerGroup',
 				'reviewerGroup',
 				'interests',
+				'orcid',
 				'accessToken',
 				'scope',
 				'expiresIn',
@@ -222,6 +224,7 @@ class OpenIDStep2Form extends Form
 		$selectedProvider = $this->getData('selectedProvider');
 		$result = false;
 		
+		$orcid = $this->getData('orcid');
 		$access_token = $this->getData('accessToken');
 		$scope = $this->getData('scope');
 		$expires_in = $this->getData('expiresIn');		
@@ -255,7 +258,7 @@ class OpenIDStep2Form extends Form
 					}
 				}
 				if ($result && isset($user)) {
-					$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
+					$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 'orcid' => $orcid,
 					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]);
 					
 					OpenIDHandler::updateUserDetails(isset($payload) ? $payload : null, $user, Application::get()->getRequest(), $selectedProvider, true);

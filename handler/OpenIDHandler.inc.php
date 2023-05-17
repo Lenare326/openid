@@ -144,11 +144,13 @@ class OpenIDHandler extends Handler
 			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : '';
 			$userAccessToken = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : '';
 			$userOrcidNum =  '';
+			$userOrcidNumTmp =  '';
 			
 			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
 			if(!empty($userOrcidUrl)){
 				$userOrcidNum =  explode('/', $userOrcidUrl);
 				$providerSettingsId = end($userOrcidNum);
+				$userOrcidNumTmp = end($userOrcidNum);
 			}
 			
 			
@@ -161,6 +163,7 @@ class OpenIDHandler extends Handler
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
+				'orcid' =>  isset($userOrcidNumTmp) ? $userOrcidNumTmp : null,
 				'access_token' => null,
 				'scope' => 'null',
 				'expires_in' => ' 631139040',
@@ -513,6 +516,10 @@ class OpenIDHandler extends Handler
 						$jwtPayload = JWT::decode($t, $publicKey, array('RS256'));
 
 						if (isset($jwtPayload)) {
+							$orcidId = null;
+							if(property_exists($jwtPayload, 'sub') && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/',$jwtPayload->sub)){
+								$orcidId = $jwtPayload->sub;
+							}
 							$credentials = [
 								'id' => property_exists($jwtPayload, 'sub') ? $jwtPayload->sub : null,
 								'email' => property_exists($jwtPayload, 'email') ? $jwtPayload->email : null,
@@ -520,6 +527,7 @@ class OpenIDHandler extends Handler
 								'given_name' => property_exists($jwtPayload, 'given_name') ? $jwtPayload->given_name : null,
 								'family_name' => property_exists($jwtPayload, 'family_name') ? $jwtPayload->family_name : null,
 								'email_verified' => property_exists($jwtPayload, 'email_verified') ? $jwtPayload->email_verified : null,
+								'orcid' => $orcidId,
 								'access_token' => $userAccessToken,
 								'scope' => $userOrcidScope,
 								'expires_in' => $accessTokenExpiration,

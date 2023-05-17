@@ -77,6 +77,20 @@
 							<input type="text" name="familyName" id="familyName" value="{$familyName|escape}" maxlength="255">
 						</label>
 					</div>
+					{* Adding Orcid field *}
+					<div class="orcid">
+						<label>
+							<span class="label">
+								ORCID iD
+								<span class="required" aria-hidden="true">*</span>
+								<span class="pkp_screen_reader">
+									{translate key="common.required"}
+								</span>
+							</span>
+							<input type="text" name="orcid" id="orcid" value="{$orcid|escape}" maxlength="255" readonly>
+						</label>
+					</div>
+					{* End Orcid field *}
 					<div class="email">
 						<label>
 							<span class="label">
