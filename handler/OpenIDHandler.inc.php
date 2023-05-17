@@ -597,7 +597,6 @@ class OpenIDHandler extends Handler
 	
 	/**
 	* stores and handles orcid id, access token, scope, and token expiration date
-	* used only if Orcid Profile Plugin is enabled
 	* adding these fields improves compatibility with Orcid Plugin functions
 	*/
 	public static function addOrcidPluginFields($user, $payload){
@@ -614,7 +613,8 @@ class OpenIDHandler extends Handler
 		// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
 		if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
-			$user->setOrcid($orcidIdUrl);
+			
+			$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
 			error_log("ORCID iD stored/updated for user $username.");
 		}
 	
@@ -634,25 +634,25 @@ class OpenIDHandler extends Handler
 
 			if($newEntry || $overwriteEntry){
 				
-				$user->setOrcid($orcidIdUrl);
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
 				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
 				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $userOrcidScope, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');
+				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');	
+				
 				
 				error_log("Orcid fields updated for entry $username");
 			}
+			
 
 			else {
 				error_log("Already stored an ORCID iD with a valid token for user $username, not overwriting.");
 			}
-
-			$userDao->updateObject($user); // this needs to be called, otherwise the data is not saved
 			
 		}
 		
+		
 		else {
-			error_log("OpenIDHandler did not save additional ORCID data (token, scope, expiry). Fields empty! Check if Shibboleth Headers are set correctly. If this was intended, you can safely ignore this message.");
+			error_log("OpenIDHandler did not save additional ORCID data (token, scope, expiry). Fields empty!");
 		}
 	}
 	
