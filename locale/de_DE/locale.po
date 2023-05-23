@@ -62,6 +62,9 @@ msgstr "E-Mail-Adresse benötigt"
 msgid "plugins.generic.openid.form.error.emailExists"
 msgstr "Die verwendete E-Mail-Adresse existiert bereits. Bitte versuchen Sie, sich bei dem bereits vorhandenen Konto anzumelden."
 
+msgid "plugins.generic.openid.form.error.orcidExists"
+msgstr "Die von Ihnen angegebene ORCID iD existiert bereits. Bitte versuchen Sie, sich mit Ihrer bevorzugten Anmeldemethode (Shibboleth ODER Anmeldung über ORCID) bei dem bereits bestehenden Konto anzumelden. Es ist nicht möglich, zwischen diesen Methoden hin und her zu wechseln!"
+
 msgid "plugins.generic.openid.form.error.privacyConsent.required"
 msgstr "Die Zustimmung zu den Datenschutzbestimmungen ist zwingend erforderlich."
 

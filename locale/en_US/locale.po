@@ -77,6 +77,9 @@ msgstr "An email is required."
 msgid "plugins.generic.openid.form.error.emailExists"
 msgstr "The email address you provided already exists. Please try to log in to the existing account."
 
+msgid "plugins.generic.openid.form.error.orcidExists"
+msgstr "The ORCID iD you provided already exists. Please try to log in to the existing account using your preferred sign-in method (Shibboleth OR Sign-in via ORCID). Switching back and forth between these methods is not possible!"
+
 msgid "plugins.generic.openid.form.error.privacyConsent.required"
 msgstr "You must agree to the terms of the privacy statement."
 

@@ -181,6 +181,12 @@ class OpenIDStep2Form extends Form
 					array(DAORegistry::getDAO('UserDAO'), 'userExistsByEmail'), array(), true
 				)
 			);
+			$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array(), true
+				)
+			);
 			$context = Application::get()->getRequest()->getContext();
 			if ($context && $context->getData('privacyStatement')) {
 				$this->addCheck(new FormValidator($this, 'privacyConsent', 'required', 'plugins.generic.openid.form.error.privacyConsent.required'));
