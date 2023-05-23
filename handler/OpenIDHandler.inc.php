@@ -144,13 +144,13 @@ class OpenIDHandler extends Handler
 			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : '';
 			$userAccessToken = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : '';
 			$userOrcidNum =  '';
-			$userOrcidNumTmp =  '';
+			//$userOrcidNumTmp =  '';
 			
 			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
 			if(!empty($userOrcidUrl)){
 				$userOrcidNum =  explode('/', $userOrcidUrl);
-				$providerSettingsId = end($userOrcidNum);
-				$userOrcidNumTmp = end($userOrcidNum);
+				//$providerSettingsId = end($userOrcidNum);
+				$userOrcidNum = end($userOrcidNum);
 			}
 			
 			
@@ -163,7 +163,7 @@ class OpenIDHandler extends Handler
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
-				'orcid' =>  isset($userOrcidNumTmp) ? $userOrcidNumTmp : null,
+				'orcid' =>  isset($userOrcidNum) ? $userOrcidNum : null,
 				'access_token' => null,
 				'scope' => 'null',
 				'expires_in' => ' 631139040',
@@ -273,7 +273,7 @@ class OpenIDHandler extends Handler
 		if ($selectedProvider == 'orcid' || $selectedProvider == 'shibboleth') {
 				
 				// only perform the below steps if payload['id'] is an ORCID iD
-				if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id']) && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id'])) {
+				if (is_array($payload) && key_exists('orcid', $payload) && !empty($payload['orcid']) && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['orcid'])) {
 					
 					// save orcid id, acces token, token expiration and scope (the latter 3 only if available)
 						self::addOrcidPluginFields($user, $payload);
@@ -289,13 +289,13 @@ class OpenIDHandler extends Handler
 				
 				// if Shibboleth and Orcid Provider are used at the same time, set the provider settings for both to avoid sign-up and login with two different ORCID iDs
 				// assure that the [id] is an Orcid ID and not UIN (UIN is used if Shib does not transfer ORCID iD as attribute)
-				$tmpProviderList = $settings['provider'];
+				/*$tmpProviderList = $settings['provider'];
 				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'shibboleth' && key_exists('orcid', $tmpProviderList)){
 					$userSettingsDao->updateSetting($user->getId(), 'openid::orcid', $payload['id'], 'string');
 				}
 				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'orcid' && key_exists('shibboleth', $tmpProviderList)){
 					$userSettingsDao->updateSetting($user->getId(), 'openid::shibboleth', $payload['id'], 'string');
-				}
+				}*/
 				
 			}
 			$generateApiKey = isset($settings) && key_exists('generateAPIKey', $settings) ? $settings['generateAPIKey'] : false;
@@ -616,7 +616,7 @@ class OpenIDHandler extends Handler
 		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
 		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
 		
-		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
+		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['orcid'];
 		
 		// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');

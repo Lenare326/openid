@@ -78,6 +78,7 @@
 						</label>
 					</div>
 					{* Adding Orcid field *}
+					{if !empty($orcid)}
 					<div class="orcid">
 						<label>
 							<span class="label">
@@ -90,6 +91,7 @@
 							<input type="text" name="orcid" id="orcid" value="{$orcid|escape}" maxlength="255" readonly>
 						</label>
 					</div>
+					{/if}
 					{* End Orcid field *}
 					<div class="email">
 						<label>
