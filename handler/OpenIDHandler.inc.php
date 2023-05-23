@@ -39,9 +39,12 @@ import('classes.handler.Handler');
  *
  *
  */
+ 
+ 
+define("ORCID_BASE_URL", "https://sandbox.orcid.org/");
+
 class OpenIDHandler extends Handler
 {
-
 	function doMicrosoftAuthentication($args, $request)
 	{
 		return $this->doAuthentication($args, $request, 'microsoft');
@@ -163,7 +166,7 @@ class OpenIDHandler extends Handler
 				'given_name' => isset($userGivenName) ? $userGivenName : null,
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
-				'orcid' =>  isset($userOrcidNum) ? $userOrcidNum : null,
+				'orcid' =>  isset($userOrcidUrl) ? $userOrcidUrl : null,
 				'access_token' => null,
 				'scope' => 'null',
 				'expires_in' => ' 631139040',
@@ -273,7 +276,7 @@ class OpenIDHandler extends Handler
 		if ($selectedProvider == 'orcid' || $selectedProvider == 'shibboleth') {
 				
 				// only perform the below steps if payload['id'] is an ORCID iD
-				if (is_array($payload) && key_exists('orcid', $payload) && !empty($payload['orcid']) && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['orcid'])) {
+				if (is_array($payload) && key_exists('orcid', $payload) && !empty($payload['orcid'])) {
 					
 					// save orcid id, acces token, token expiration and scope (the latter 3 only if available)
 						self::addOrcidPluginFields($user, $payload);
@@ -519,15 +522,16 @@ class OpenIDHandler extends Handler
 							$orcidId = null;
 							if(property_exists($jwtPayload, 'sub') && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/',$jwtPayload->sub)){
 								$orcidId = $jwtPayload->sub;
+								$orcidIdUrl = ORCID_BASE_URL.$orcidId;
 							}
 							$credentials = [
-								'id' => property_exists($jwtPayload, 'sub') ? $jwtPayload->sub : null,
+								'id' => property_exists($jwtPayload, 'sub') ? (preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/',$jwtPayload->sub)? ORCID_BASE_URL.($jwtPayload->sub) : $jwtPayload->sub) : null,
 								'email' => property_exists($jwtPayload, 'email') ? $jwtPayload->email : null,
 								'username' => property_exists($jwtPayload, 'preferred_username') ? $jwtPayload->preferred_username : null,
 								'given_name' => property_exists($jwtPayload, 'given_name') ? $jwtPayload->given_name : null,
 								'family_name' => property_exists($jwtPayload, 'family_name') ? $jwtPayload->family_name : null,
 								'email_verified' => property_exists($jwtPayload, 'email_verified') ? $jwtPayload->email_verified : null,
-								'orcid' => $orcidId,
+								'orcid' => $orcidIdUrl,
 								'access_token' => $userAccessToken,
 								'scope' => $userOrcidScope,
 								'expires_in' => $accessTokenExpiration,
@@ -616,7 +620,7 @@ class OpenIDHandler extends Handler
 		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
 		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
 		
-		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['orcid'];
+		$orcidIdUrl = $payload['orcid'];
 		
 		// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
