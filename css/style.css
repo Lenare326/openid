@@ -129,6 +129,10 @@
   line-height: 1.6em;
 }
 
-#orcid {
+#orcidRegister {
+	background-color: #E0E0E0;
+}
+
+#orcidConnect {
 	background-color: #E0E0E0;
 }

@@ -84,7 +84,7 @@
 							<span class="label">
 								ORCID iD
 							</span>
-							<input type="text" name="orcid" id="orcid" value="{$orcid|escape}" maxlength="255" readonly>
+							<input type="text" name="orcid" id="orcidRegister" value="{$orcid|escape}" maxlength="255" readonly>
 						</label>
 					</div>
 					{/if}
@@ -214,6 +214,18 @@
 							</a>
 						</label>
 					</div>
+					{* Adding Orcid field *}
+					{if !empty($orcid)}
+					<div class="orcid">
+						<label>
+							<span class="label">
+								ORCID iD
+							</span>
+							<input type="text" name="orcid" id="orcidConnect" value="{$orcid|escape}" maxlength="255" readonly>
+						</label>
+					</div>
+					{/if}
+					{* End Orcid field *}
 				</fieldset>
 				<div class="buttons">
 					<button class="submit" type="submit" name="connect">

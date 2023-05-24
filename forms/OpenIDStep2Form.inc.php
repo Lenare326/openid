@@ -195,6 +195,12 @@ class OpenIDStep2Form extends Form
 			$this->_data['returnTo'] = "connect";
 			$this->addCheck(new FormValidator($this, 'usernameLogin', 'required', 'plugins.generic.openid.form.error.usernameOrEmail.required'));
 			$this->addCheck(new FormValidator($this, 'passwordLogin', 'required', 'plugins.generic.openid.form.error.password.required'));
+			/*$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array(), true
+				)
+			);*/
 			$username = $this->getData('usernameLogin');
 			$password = $this->getData('passwordLogin');
 			$user = $userDao->getByUsername($username, true);
@@ -204,6 +210,13 @@ class OpenIDStep2Form extends Form
 			if (!isset($user)) {
 				$this->addError('usernameLogin', __('plugins.generic.openid.form.error.user.not.found'));
 			} else {
+				$userId = $user->getId();
+				$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array($userId), true
+				)
+			);
 				$valid = Validation::verifyPassword($user->getUsername(), $password, $user->getPassword(), $rehash);
 				if (!$valid) {
 					$this->addError('passwordLogin', __('plugins.generic.openid.form.error.invalid.credentials'));
