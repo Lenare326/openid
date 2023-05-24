@@ -136,3 +136,15 @@
 #orcidConnect {
 	background-color: #E0E0E0;
 }
+
+#formErrors{
+    margin: 1.43rem 0;
+    padding: .714rem;
+    background: #ff4040;
+    color: #fff;
+}
+
+#formErrors a{
+	background-color: #ff4040;
+	color: #fff;
+}
