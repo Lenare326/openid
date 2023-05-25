@@ -26,6 +26,13 @@ function showRegisterForm() {
 	document.querySelectorAll("#oauth #register-form input:not(#emailConsent, .reviewerGroupInput)").forEach(e => e.required = true);
 	document.querySelectorAll("#oauth #register-form select").forEach(e => e.required = true);
 	document.querySelectorAll("#oauth #login-form input").forEach(e => e.required = false);
+
+	var elem = document.getElementById('orcidRegister');
+	
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
+	}
 }
 
 function showLoginForm() {
@@ -34,5 +41,12 @@ function showLoginForm() {
 	document.querySelectorAll("#oauth #register-form input").forEach(e => e.required = false);
 	document.querySelectorAll("#oauth #register-form select").forEach(e => e.required = false);
 	document.querySelectorAll("#oauth #login-form input").forEach(e => e.required = true);
+	
+	var elem = document.getElementById('orcidConnect');
+
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
+	}
 }
 

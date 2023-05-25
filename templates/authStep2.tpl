@@ -84,7 +84,7 @@
 							<span class="label">
 								ORCID iD
 							</span>
-							<input type="text" name="orcid" id="orcidRegister" value="{$orcid|escape}" maxlength="255" readonly>
+							<input type="text" name="orcidRegister" id="orcidRegister" value="{$orcid|escape}" maxlength="255" readonly>
 						</label>
 					</div>
 					{/if}
@@ -221,7 +221,7 @@
 							<span class="label">
 								ORCID iD
 							</span>
-							<input type="text" name="orcid" id="orcidConnect" value="{$orcid|escape}" maxlength="255" readonly>
+							<input type="text" name="orcidConnect" id="orcidConnect" value="{$orcid|escape}" maxlength="255" readonly>
 						</label>
 					</div>
 					{/if}

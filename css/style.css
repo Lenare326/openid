@@ -129,13 +129,11 @@
   line-height: 1.6em;
 }
 
-#orcidRegister {
+
+#orcid, #orcidRegister, #orcidConnect {
 	background-color: #E0E0E0;
 }
 
-#orcidConnect {
-	background-color: #E0E0E0;
-}
 
 #formErrors{
     margin: 1.43rem 0;
@@ -148,3 +146,5 @@
 	background-color: #ff4040;
 	color: #fff;
 }
+
+
