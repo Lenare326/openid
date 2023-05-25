@@ -3,8 +3,16 @@ let returnTo = document.querySelector('.page_oauth #returnTo');
 if (pageOauth !== undefined && pageOauth != null) {
 	if (returnTo && returnTo.value === 'register') {
 		showRegisterForm();
+		
 	} else if (returnTo && returnTo.value === 'connect') {
 		showLoginForm();
+	}
+	
+	var elem = document.getElementById('orcidRegister');
+	
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
 	}
 	document.querySelector('.page_oauth #showRegisterForm').addEventListener('click', showRegisterForm);
 	document.querySelector('.page_oauth #showLoginForm').addEventListener('click', showLoginForm);
