@@ -131,10 +131,34 @@ class OpenIDPlugin extends GenericPlugin
 			}
 
 			HookRegistry::register('LoadHandler', array($this, 'callbackLoadHandler'));
+			
+			
+			
+			/**** AR TESTING ****/
+			//HookRegistry::register('authordao::getAdditionalFieldNames', array($this, 'handleAdditionalFieldNames'));
+		
+			// Add more ORCiD fields to UserDAO
+			HookRegistry::register('userdao::getAdditionalFieldNames', array($this, 'handleAdditionalFieldNames'));
+			/**** AR TESTING END****/
 		}
 
 		return $success;
 	}
+	
+	/**** AR TESTING ****/
+	function handleAdditionalFieldNames($hookName, $params) {
+		$fields =& $params[1];
+		$fields[] = 'orcidSandbox';
+		$fields[] = 'orcidAccessToken';
+		$fields[] = 'orcidAccessScope';
+		$fields[] = 'orcidRefreshToken';
+		$fields[] = 'orcidAccessExpiresOn';
+		$fields[] = 'orcidAccessDenied';
+
+		return false;
+	}
+
+	/**** AR TESTING  END****/
 
 	/**
 	 * Loads Handler for login, registration, sign-out and the plugin specific urls.

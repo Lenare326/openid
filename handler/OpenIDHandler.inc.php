@@ -626,7 +626,8 @@ class OpenIDHandler extends Handler
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
 		if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
 			
-			$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
+			//$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
+			$user->setData('orcid', $orcidIdUrl);
 			error_log("ORCID iD stored/updated for user $username.");
 		}
 	
@@ -646,10 +647,18 @@ class OpenIDHandler extends Handler
 
 			if($newEntry || $overwriteEntry){
 				
+				/*
 				$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
 				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
 				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $userOrcidScope, 'string');
 				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');	
+				*/
+				
+				$user->setData('orcid', $orcidIdUrl);
+				$user->setData('orcidAccessToken', $userAccessToken);
+				$user->setData('orcidAccessScope', $userOrcidScope);
+				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration);
+		
 				
 				
 				error_log("Orcid fields updated for entry $username");
@@ -659,6 +668,8 @@ class OpenIDHandler extends Handler
 			else {
 				error_log("Already stored an ORCID iD with a valid token for user $username, not overwriting.");
 			}
+			
+			$userDao->updateObject($user);
 			
 		}
 		
