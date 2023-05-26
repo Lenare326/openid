@@ -641,10 +641,13 @@ class OpenIDHandler extends Handler
 			$today = date_create(date('Y-m-d'));
 			
 			$scopeStoredInDB = $user->getData('orcidAccessScope');
+			$tokenStoredInDB = $user->getData('orcidAccessToken');
 			
-			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token)
+			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token, different token)
+			// updates on almost every login since the token is always freshly created (but this is the only way to catch IDs previously saved with the Orcid Plugin)
+			// TODO: maybe simplify and always update instead of checking conditions
 			$newEntry = (empty($orcidStoredInDB) || empty($storedExpDate));
-			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl) || ($scopeStoredInDB != $userOrcidScope));
+			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl) || ($scopeStoredInDB != $userOrcidScope) || ($tokenStoredInDB != $userAccessToken));
 
 
 			if($newEntry || $overwriteEntry){
