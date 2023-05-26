@@ -640,27 +640,28 @@ class OpenIDHandler extends Handler
 			$accessExpiredDate = empty($storedExpDate) ? null : date_create($storedExpDate);
 			$today = date_create(date('Y-m-d'));
 			
+			$scopeStoredInDB = $user->getData('orcidAccessScope');
+			
 			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token)
 			$newEntry = (empty($orcidStoredInDB) || empty($storedExpDate));
-			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl));
+			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl) || ($scopeStoredInDB != $userOrcidScope));
 
 
 			if($newEntry || $overwriteEntry){
 				
-				/*
-				$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $userOrcidScope, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');	
-				*/
-				
+	
 				$user->setData('orcid', $orcidIdUrl);
 				$user->setData('orcidAccessToken', $userAccessToken);
 				$user->setData('orcidAccessScope', $userOrcidScope);
 				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration);
-		
 				
-				
+				// if Orcid iD was stored previously via Orcid Plugin, remove the access token after overwriting with new data
+				// TODO: can be adpated once the refresh token will be delivered via OpenID and Shibboleth
+				if(!empty($user->getData('orcidRefreshToken'))){
+					$user->setData('orcidRefreshToken', null);
+				}
+
+
 				error_log("Orcid fields updated for entry $username");
 			}
 			
