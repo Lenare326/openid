@@ -327,13 +327,16 @@ class OpenIDStep2Form extends Form
 			$interestManager = new InterestManager();
 			$interestManager->setInterestsForUser($user, $this->getData('interests'));
 
-			// Save the selected roles or assign the Reader role if none selected
+			// Save the selected roles or assign the Reader and Author role if none selected
+			// Author role is necessary to make submissions
 			if ($request->getContext() && !$this->getData('reviewerGroup')) {
 				$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 				/* @var $userGroupDao UserGroupDAO */
 				$defaultReaderGroup = $userGroupDao->getDefaultByRoleId($request->getContext()->getId(), ROLE_ID_READER);
-				if ($defaultReaderGroup) {
+				$defaultAuthorGroup = $userGroupDao->getDefaultByRoleId($request->getContext()->getId(), ROLE_ID_AUTHOR);
+				if ($defaultReaderGroup && $defaultAuthorGroup) {
 					$userGroupDao->assignUserToGroup($user->getId(), $defaultReaderGroup->getId());
+					$userGroupDao->assignUserToGroup($user->getId(), $defaultAuthorGroup->getId());
 				}
 			} else {
 				import('lib.pkp.classes.user.form.UserFormHelper');
