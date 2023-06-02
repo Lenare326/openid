@@ -131,8 +131,6 @@ class OpenIDLoginHandler extends Handler
 					$this->_enableLegacyLogin($templateMgr, $request);
 				}
 				
-				// assign the status of the ShibbolethAuthPlugin
-				//$templateMgr->assign('shibbolethEnabled', $this->_sitewidePluginEnabled('ShibbolethAuthPlugin'));
 			} else {
 				$templateMgr->assign('openidError', true);
 				$templateMgr->assign('errorMsg', 'plugins.generic.openid.settings.error');

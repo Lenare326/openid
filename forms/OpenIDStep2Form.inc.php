@@ -195,12 +195,7 @@ class OpenIDStep2Form extends Form
 			$this->_data['returnTo'] = "connect";
 			$this->addCheck(new FormValidator($this, 'usernameLogin', 'required', 'plugins.generic.openid.form.error.usernameOrEmail.required'));
 			$this->addCheck(new FormValidator($this, 'passwordLogin', 'required', 'plugins.generic.openid.form.error.password.required'));
-			/*$this->addCheck(
-				new FormValidatorCustom(
-					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
-					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array(), true
-				)
-			);*/
+
 			$username = $this->getData('usernameLogin');
 			$password = $this->getData('passwordLogin');
 			$user = $userDao->getByUsername($username, true);
@@ -264,8 +259,7 @@ class OpenIDStep2Form extends Form
 						$result = true;
 					}
 				} elseif ($connect) {
-					/*$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
-					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]); */
+
 					$username = $this->getData('usernameLogin');
 					$password = $this->getData('passwordLogin');
 					$user = $userDao->getByUsername($username, true);

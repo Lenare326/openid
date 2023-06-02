@@ -146,16 +146,8 @@ class OpenIDHandler extends Handler
 			$userFamilyName = $_SERVER[$familyNameHeader];
 			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : '';
 			$userAccessToken = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : '';
-			$userOrcidNum =  '';
-			//$userOrcidNumTmp =  '';
 			
 			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
-			if(!empty($userOrcidUrl)){
-				$userOrcidNum =  explode('/', $userOrcidUrl);
-				//$providerSettingsId = end($userOrcidNum);
-				$userOrcidNum = end($userOrcidNum);
-			}
-			
 			
 			// TODO replace the placeholders by values from userAccessToken
 			$tokenPayload = [
@@ -289,17 +281,6 @@ class OpenIDHandler extends Handler
 		if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
 			if ($setProviderId) {
 				$userSettingsDao->updateSetting($user->getId(), 'openid::'.$selectedProvider, $payload['id'], 'string');
-				
-				// if Shibboleth and Orcid Provider are used at the same time, set the provider settings for both to avoid sign-up and login with two different ORCID iDs
-				// assure that the [id] is an Orcid ID and not UIN (UIN is used if Shib does not transfer ORCID iD as attribute)
-				/*$tmpProviderList = $settings['provider'];
-				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'shibboleth' && key_exists('orcid', $tmpProviderList)){
-					$userSettingsDao->updateSetting($user->getId(), 'openid::orcid', $payload['id'], 'string');
-				}
-				if(preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/', $payload['id']) && $selectedProvider == 'orcid' && key_exists('shibboleth', $tmpProviderList)){
-					$userSettingsDao->updateSetting($user->getId(), 'openid::shibboleth', $payload['id'], 'string');
-				}*/
-				
 			}
 			$generateApiKey = isset($settings) && key_exists('generateAPIKey', $settings) ? $settings['generateAPIKey'] : false;
 			$secret = Config::getVar('security', 'api_key_secret', '');
@@ -658,7 +639,7 @@ class OpenIDHandler extends Handler
 				$user->setData('orcidAccessScope', $userOrcidScope);
 				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration);
 				
-				// if Orcid iD was stored previously via Orcid Plugin, remove the access token after overwriting with new data
+				// if Orcid iD was stored previously via Orcid Plugin, remove the refresh token after overwriting with new data
 				// TODO: can be adpated once the refresh token will be delivered via OpenID and Shibboleth
 				if(!empty($user->getData('orcidRefreshToken'))){
 					$user->setData('orcidRefreshToken', null);
