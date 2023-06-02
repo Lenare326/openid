@@ -558,7 +558,7 @@ class OpenIDHandler extends Handler
 				$user->setData('orcidAccessScope', $userOrcidScope);
 				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration);
 				
-				// if Orcid iD was stored previously via Orcid Plugin, remove the access token after overwriting with new data
+				// if Orcid iD was stored previously via Orcid Plugin, remove the refresh token after overwriting with new data
 				// TODO: can be adpated once the refresh token will be delivered via OpenID and Shibboleth
 				if(!empty($user->getData('orcidRefreshToken'))){
 					$user->setData('orcidRefreshToken', null);

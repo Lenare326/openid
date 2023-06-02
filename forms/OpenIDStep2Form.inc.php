@@ -346,7 +346,7 @@ class OpenIDStep2Form extends Form
 		return $user;
 	}
 	
-		/** Get the status of the Orcid Profile Plugin
+	/** Get the status of the Orcid Profile Plugin
 	* @return int isEnabled
 	*/
 	function orcidEnabled() {
