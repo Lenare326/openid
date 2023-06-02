@@ -100,6 +100,7 @@ class OpenIDStep2Form extends Form
 				'givenName' => $this->credentials['given_name'],
 				'familyName' => $this->credentials['family_name'],
 				'email' => $this->credentials['email'],
+				'orcid' => $this->credentials['orcid'],
 				'accessToken' => $this->credentials['access_token'],
 				'scope' => $this->credentials['scope'],
 				'expiresIn' => $this->credentials['expires_in'],
@@ -133,6 +134,7 @@ class OpenIDStep2Form extends Form
 				'readerGroup',
 				'reviewerGroup',
 				'interests',
+				'orcid',
 				'accessToken',
 				'scope',
 				'expiresIn',
@@ -179,10 +181,17 @@ class OpenIDStep2Form extends Form
 					array(DAORegistry::getDAO('UserDAO'), 'userExistsByEmail'), array(), true
 				)
 			);
+			$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array(), true
+				)
+			);
 			$context = Application::get()->getRequest()->getContext();
 			if ($context && $context->getData('privacyStatement')) {
 				$this->addCheck(new FormValidator($this, 'privacyConsent', 'required', 'plugins.generic.openid.form.error.privacyConsent.required'));
 			}
+			
 		} elseif ($connect) {
 			$this->_data['returnTo'] = "connect";
 			$this->addCheck(new FormValidator($this, 'usernameLogin', 'required', 'plugins.generic.openid.form.error.usernameOrEmail.required'));
@@ -196,6 +205,13 @@ class OpenIDStep2Form extends Form
 			if (!isset($user)) {
 				$this->addError('usernameLogin', __('plugins.generic.openid.form.error.user.not.found'));
 			} else {
+				$userId = $user->getId();
+				$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array($userId), true
+				)
+			);
 				$valid = Validation::verifyPassword($user->getUsername(), $password, $user->getPassword(), $rehash);
 				if (!$valid) {
 					$this->addError('passwordLogin', __('plugins.generic.openid.form.error.invalid.credentials'));
@@ -222,6 +238,7 @@ class OpenIDStep2Form extends Form
 		$selectedProvider = $this->getData('selectedProvider');
 		$result = false;
 		
+		$orcid = $this->getData('orcid');
 		$access_token = $this->getData('accessToken');
 		$scope = $this->getData('scope');
 		$expires_in = $this->getData('expiresIn');		
@@ -242,8 +259,7 @@ class OpenIDStep2Form extends Form
 						$result = true;
 					}
 				} elseif ($connect) {
-					/*$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
-					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]); */
+					
 					$username = $this->getData('usernameLogin');
 					$password = $this->getData('passwordLogin');
 					$user = $userDao->getByUsername($username, true);
@@ -255,7 +271,7 @@ class OpenIDStep2Form extends Form
 					}
 				}
 				if ($result && isset($user)) {
-					$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 
+					$payload = (['given_name' => $this->getData('givenName'), 'family_name' => $this->getData('familyName'), 'id' => $oauthId, 'orcid' => $orcid,
 					'access_token' => $access_token, 'scope' => $scope, 'expires_in' => $expires_in]);
 					
 					OpenIDHandler::updateUserDetails(isset($payload) ? $payload : null, $user, Application::get()->getRequest(), $selectedProvider, true);
@@ -305,13 +321,18 @@ class OpenIDStep2Form extends Form
 			$interestManager = new InterestManager();
 			$interestManager->setInterestsForUser($user, $this->getData('interests'));
 
-			// Save the selected roles or assign the Reader role if none selected
+			
+			// Save the selected roles or assign the Reader and Author role if none selected
+			// Author role is necessary to make submissions
 			if ($request->getContext() && !$this->getData('reviewerGroup')) {
 				$userGroupDao = DAORegistry::getDAO('UserGroupDAO');
 				/* @var $userGroupDao UserGroupDAO */
 				$defaultReaderGroup = $userGroupDao->getDefaultByRoleId($request->getContext()->getId(), ROLE_ID_READER);
-				if ($defaultReaderGroup) {
+				$defaultAuthorGroup = $userGroupDao->getDefaultByRoleId($request->getContext()->getId(), ROLE_ID_AUTHOR);
+				
+				if ($defaultReaderGroup && $defaultAuthorGroup) {
 					$userGroupDao->assignUserToGroup($user->getId(), $defaultReaderGroup->getId());
+					$userGroupDao->assignUserToGroup($user->getId(), $defaultAuthorGroup->getId());
 				}
 			} else {
 				import('lib.pkp.classes.user.form.UserFormHelper');

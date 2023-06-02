@@ -77,6 +77,21 @@
 							<input type="text" name="familyName" id="familyName" value="{$familyName|escape}" maxlength="255">
 						</label>
 					</div>
+					
+					{* Adding Orcid field *}
+					{if !empty($orcid)}
+					<div class="orcid">
+						<label>
+							<span class="label">
+								ORCID iD
+							</span>
+							<input type="text" name="orcidRegister" id="orcidRegister" value="{$orcid|escape}" maxlength="255" readonly>
+						</label>
+					</div>
+					{/if}
+					{* End Orcid field *}
+					
+					
 					<div class="email">
 						<label>
 							<span class="label">
@@ -202,6 +217,20 @@
 							</a>
 						</label>
 					</div>
+					
+					{* Adding Orcid field *}
+					{if !empty($orcid)}
+					<div class="orcid">
+						<label>
+							<span class="label">
+								ORCID iD
+							</span>
+							<input type="text" name="orcidConnect" id="orcidConnect" value="{$orcid|escape}" maxlength="255" readonly>
+						</label>
+					</div>
+					{/if}
+					{* End Orcid field *}
+					
 				</fieldset>
 				<div class="buttons">
 					<button class="submit" type="submit" name="connect">

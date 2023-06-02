@@ -39,6 +39,10 @@ import('classes.handler.Handler');
  *
  *
  */
+ 
+ 
+define("ORCID_BASE_URL", "https://sandbox.orcid.org/");
+ 
 class OpenIDHandler extends Handler
 {
 
@@ -182,7 +186,7 @@ class OpenIDHandler extends Handler
 		// update orcid fields (moved outside of 'providerSync' clause)
 		if ($selectedProvider == 'orcid') {
 				
-			if (is_array($payload) && key_exists('id', $payload) && !empty($payload['id'])) {
+			if (is_array($payload) && key_exists('orcid', $payload) && !empty($payload['orcid'])) {
 					
 				// save orcid id, acces token, token expiration and scope (the latter 3 only if available)
 				self::addOrcidPluginFields($user, $payload);
@@ -404,7 +408,7 @@ class OpenIDHandler extends Handler
 		$credentials = null;
 		$userAccessToken = isset($token['access_token']) ?  $token['access_token'] : null;
 		
-		// add additional keys for Orid Provider to enable interoperability with Orcid Profile plugin
+		// add additional keys for Orcid Provider to enable interoperability with Orcid Profile plugin
 		$userOrcidScope = isset($token['scope']) ? $token['scope'] : null;
 		$accessTokenExpiration = isset($token['expires_in']) ? $token['expires_in'] : null;
 		
@@ -415,13 +419,21 @@ class OpenIDHandler extends Handler
 						$jwtPayload = JWT::decode($t, $publicKey, array('RS256'));
 
 						if (isset($jwtPayload)) {
+							
+							$orcidId = null;
+							if(property_exists($jwtPayload, 'sub') && preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/',$jwtPayload->sub)){
+								$orcidId = $jwtPayload->sub;
+								$orcidIdUrl = ORCID_BASE_URL.$orcidId;
+							}
+							
 							$credentials = [
-								'id' => property_exists($jwtPayload, 'sub') ? $jwtPayload->sub : null,
+								'id' => property_exists($jwtPayload, 'sub') ? (preg_match('/^\d{4}-\d{4}-\d{4}-\d{4}/',$jwtPayload->sub)? ORCID_BASE_URL.($jwtPayload->sub) : $jwtPayload->sub) : null,
 								'email' => property_exists($jwtPayload, 'email') ? $jwtPayload->email : null,
 								'username' => property_exists($jwtPayload, 'preferred_username') ? $jwtPayload->preferred_username : null,
 								'given_name' => property_exists($jwtPayload, 'given_name') ? $jwtPayload->given_name : null,
 								'family_name' => property_exists($jwtPayload, 'family_name') ? $jwtPayload->family_name : null,
 								'email_verified' => property_exists($jwtPayload, 'email_verified') ? $jwtPayload->email_verified : null,
+								'orcid' => $orcidIdUrl,
 								'access_token' => $userAccessToken,
 								'scope' => $userOrcidScope,
 								'expires_in' => $accessTokenExpiration,
@@ -511,13 +523,14 @@ class OpenIDHandler extends Handler
 		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
 		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
 		
-		$orcidIdUrl = "https://sandbox.orcid.org/".$payload['id'];
+		$orcidIdUrl = $payload['orcid'];
 		
 		// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
+
 		if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
 			
-			$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
+			$user->setData('orcid', $orcidIdUrl);
 			error_log("ORCID iD stored/updated for user $username.");
 		}
 	
@@ -529,27 +542,38 @@ class OpenIDHandler extends Handler
 			$storedExpDate = $user->getData('orcidAccessExpiresOn');
 			$accessExpiredDate = empty($storedExpDate) ? null : date_create($storedExpDate);
 			$today = date_create(date('Y-m-d'));
+			$scopeStoredInDB = $user->getData('orcidAccessScope');
+			$tokenStoredInDB = $user->getData('orcidAccessToken');
 			
-			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token)
+			// CONDITIONS OF WHEN TO UPDATE ORCID FIELDS (no entry yet, different ORCID iD, expired token, different token)
+			// updates on almost every login since the token is always freshly created (but this is the only way to catch IDs previously saved with the Orcid Plugin)
+			// TODO: maybe simplify and always update instead of checking conditions
 			$newEntry = (empty($orcidStoredInDB) || empty($storedExpDate));
-			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl));
-
+			$overwriteEntry = (!empty($accessExpiredDate) && ($today > $accessExpiredDate) || ($orcidStoredInDB != $orcidIdUrl) || ($scopeStoredInDB != $userOrcidScope) || ($tokenStoredInDB != $userAccessToken));
 
 			if($newEntry || $overwriteEntry){
 				
-				$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessToken', $userAccessToken, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessScope', $userOrcidScope, 'string');
-				$userSettingsDao->updateSetting($user->getId(), 'orcidAccessExpiresOn', $accessTokenExpiration, 'string');	
+				$user->setData('orcid', $orcidIdUrl);
+				$user->setData('orcidAccessToken', $userAccessToken);
+				$user->setData('orcidAccessScope', $userOrcidScope);
+				$user->setData('orcidAccessExpiresOn', $accessTokenExpiration);
 				
+				// if Orcid iD was stored previously via Orcid Plugin, remove the access token after overwriting with new data
+				// TODO: can be adpated once the refresh token will be delivered via OpenID and Shibboleth
+				if(!empty($user->getData('orcidRefreshToken'))){
+					$user->setData('orcidRefreshToken', null);
+				}
 				
 				error_log("Orcid fields updated for entry $username");
 			}
+			
 			
 
 			else {
 				error_log("Already stored an ORCID iD with a valid token for user $username, not overwriting.");
 			}
+			
+			$userDao->updateObject($user);
 			
 		}
 		

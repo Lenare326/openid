@@ -62,6 +62,9 @@ msgstr "E-Mail-Adresse benötigt"
 msgid "plugins.generic.openid.form.error.emailExists"
 msgstr "Die verwendete E-Mail-Adresse existiert bereits. Bitte versuchen Sie, sich bei dem bereits vorhandenen Konto anzumelden."
 
+msgid "plugins.generic.openid.form.error.orcidExists"
+msgstr "Die von Ihnen angegebene ORCID iD existiert bereits. Bitte versuchen Sie, sich mit Ihrer bevorzugten Anmeldemethode (Shibboleth ODER Anmeldung über ORCID) bei dem bereits bestehenden Konto anzumelden. Es ist nicht möglich, zwischen diesen Methoden hin und her zu wechseln!"
+
 msgid "plugins.generic.openid.form.error.privacyConsent.required"
 msgstr "Die Zustimmung zu den Datenschutzbestimmungen ist zwingend erforderlich."
 
@@ -154,13 +157,19 @@ msgid "plugins.generic.openid.settings.features.desc"
 msgstr "Die folgenden Felder sind optional. Sie sind nicht erforderlich, um eine Verknüpfung mit einem OpenID-Anbieter herzustellen."
 
 msgid "plugins.generic.openid.settings.legacyLogin"
-msgstr "Default OJS Login"
+msgstr "Standard OJS Login"
 
 msgid "plugins.generic.openid.settings.legacyLogin.check"
-msgstr "Default OJS Login aktivieren"
+msgstr "Standard OJS Login aktivieren"
 
 msgid "plugins.generic.openid.settings.legacyLogin.desc"
 msgstr "Aktivieren Sie diese Option, wenn Sie möchten, dass sich die Benutzer zusätzlich zur OpenID-Anmeldung auch mit dem default Anmeldeformular der Anwendung registrieren und anmelden können."
+
+msgid "plugins.generic.openid.settings.legacyRegister.check"
+msgstr "Standard OJS Registrierung aktivieren"
+
+msgid "plugins.generic.openid.settings.legacyRegister.desc"
+msgstr "Aktivieren Sie diese Option, wenn Sie möchten, dass sich Benutzer zusätzlich zur OpenID-Anmeldung auch über das Registrierungsformular der Anwendung registrieren können."
 
 msgid "plugins.generic.openid.settings.step2.connect"
 msgstr "Account-Verknüpfung"

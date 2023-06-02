@@ -6,6 +6,14 @@ if (pageOauth !== undefined && pageOauth != null) {
 	} else if (returnTo && returnTo.value === 'connect') {
 		showLoginForm();
 	}
+	
+	var elem = document.getElementById('orcidRegister');
+
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
+	}
+	
 	document.querySelector('.page_oauth #showRegisterForm').addEventListener('click', showRegisterForm);
 	document.querySelector('.page_oauth #showLoginForm').addEventListener('click', showLoginForm);
 	document.querySelector('form[id="oauth"]').addEventListener('keydown', function(e) {
@@ -26,6 +34,13 @@ function showRegisterForm() {
 	document.querySelectorAll("#oauth #register-form input:not(#emailConsent, .reviewerGroupInput)").forEach(e => e.required = true);
 	document.querySelectorAll("#oauth #register-form select").forEach(e => e.required = true);
 	document.querySelectorAll("#oauth #login-form input").forEach(e => e.required = false);
+	
+	var elem = document.getElementById('orcidRegister');
+
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
+	}
 }
 
 function showLoginForm() {
@@ -34,5 +49,12 @@ function showLoginForm() {
 	document.querySelectorAll("#oauth #register-form input").forEach(e => e.required = false);
 	document.querySelectorAll("#oauth #register-form select").forEach(e => e.required = false);
 	document.querySelectorAll("#oauth #login-form input").forEach(e => e.required = true);
+	
+	var elem = document.getElementById('orcidConnect');
+
+	if(elem){
+		elem.name = 'orcid';
+		elem.id = 'orcid';
+	}
 }
 
