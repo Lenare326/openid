@@ -216,7 +216,7 @@ class OpenIDStep2Form extends Form
 				$this->addCheck(
 				new FormValidatorCustom(
 					$this, 'selectedProvider', 'optional', 'plugins.generic.openid.form.error.invalid.signInMethod',
-					array(DAORegistry::getDAO('UserSettingsDAO'), 'shibOrOrcid'), array($userId)
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'usesCorrectSignIn'), array($userId)
 					)
 				);
 			
