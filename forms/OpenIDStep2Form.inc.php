@@ -210,8 +210,17 @@ class OpenIDStep2Form extends Form
 				new FormValidatorCustom(
 					$this, 'orcid', 'optional', 'plugins.generic.openid.form.error.orcidExists',
 					array(DAORegistry::getDAO('UserSettingsDAO'), 'orcidInDB'), array($userId), true
-				)
-			);
+					)
+				);
+				
+				$this->addCheck(
+				new FormValidatorCustom(
+					$this, 'selectedProvider', 'optional', 'plugins.generic.openid.form.error.invalid.signInMethod',
+					array(DAORegistry::getDAO('UserSettingsDAO'), 'shibOrOrcid'), array($userId)
+					)
+				);
+			
+			
 				$valid = Validation::verifyPassword($user->getUsername(), $password, $user->getPassword(), $rehash);
 				if (!$valid) {
 					$this->addError('passwordLogin', __('plugins.generic.openid.form.error.invalid.credentials'));

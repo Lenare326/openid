@@ -80,6 +80,9 @@ msgstr "Es konnte kein Benutzer gefunden werden, der mit Ihren Anmeldedaten übe
 msgid "plugins.generic.openid.form.error.invalid.credentials"
 msgstr "Falsches Passwort."
 
+msgid "plugins.generic.openid.form.error.invalid.signInMethod"
+msgstr "Es scheint, als versuchen Sie, sich mit einer anderen Methode anzumelden, als die, die Sie bei der Registrierung verwendet haben. Bitte verwenden Sie die Methode, die Sie ursprünglich gewählt haben (ORCID oder Shibboleth)."
+
 msgid "plugins.generic.openid.settings.error"
 msgstr "<strong>Falsche OpenID-Plugin-Konfiguration!</strong><br Es wurde kein OpenID-Provider konfiguriert!<br />Bitte melden Sie das Ihrem technischen Support."
 

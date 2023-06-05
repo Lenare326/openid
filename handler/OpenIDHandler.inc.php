@@ -607,8 +607,9 @@ class OpenIDHandler extends Handler
 		$orcidStoredInDB = empty($user->getData('orcid')) ? null : $user->getData('orcid');
 		if(empty($orcidStoredInDB) || ($orcidStoredInDB != $orcidIdUrl)){
 			
-			//$userSettingsDao->updateSetting($user->getId(), 'orcid', $orcidIdUrl, 'string');
+			// in any case, set the ORCID iD (e.g. if Shib delivers only ORCID iD but no token etc)
 			$user->setData('orcid', $orcidIdUrl);
+			$userDao->updateObject($user);
 			error_log("ORCID iD stored/updated for user $username.");
 		}
 	
