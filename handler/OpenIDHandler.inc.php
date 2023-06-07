@@ -599,7 +599,7 @@ class OpenIDHandler extends Handler
 		$userAccessToken = key_exists('access_token', $payload) ? $payload['access_token'] : null;
 		$userOrcidScope = key_exists('scope', $payload) ? $payload['scope'] : null;
 		$accessTokenExpiration = key_exists('expires_in', $payload) ? $payload['expires_in'] : null;
-		error_log("entering addOrcidPluginFields");
+		
 		$orcidIdUrl = key_exists('orcid', $payload) ? $payload['orcid'] : null;
 		if(!(empty($orcidIdUrl))) {
 			// get ORCID iD from DB (needs to be explicitly set to null, otherwise logic is not correct)
