@@ -283,14 +283,5 @@ class OpenIDLoginHandler extends Handler
 		);
 	}
 	
-	
-		function _sitewidePluginEnabled($pluginName) {
-		$pluginSettingsDao = DAORegistry::getDAO('PluginSettingsDAO');
-		$settingName="enabled";
-		$isEnabled = $pluginSettingsDao->getSetting(CONTEXT_SITE, $pluginName, $settingName);
 		
-		error_log("$pluginName Plugin enabled: $isEnabled");
-		return (int) $isEnabled; 
-	}
-	
 }
