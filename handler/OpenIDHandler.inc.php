@@ -504,8 +504,7 @@ class OpenIDHandler extends Handler
 		$context = $_plugin->getCurrentContextId();
 		
 		$isEnabled = $pluginSettingsDao->getSetting($context, $orcidPluginName, $settingName);
-		
-		error_log("Orcid Plugin enabled: $isEnabled");
+
 		return (int) $isEnabled; 
 	}
 	
@@ -533,7 +532,7 @@ class OpenIDHandler extends Handler
 				// in any case, set the ORCID iD (e.g. if Shib delivers only ORCID iD but no token etc)
 				$user->setData('orcid', $orcidIdUrl);
 				$userDao->updateObject($user);
-				error_log("ORCID iD stored/updated for user $username.");
+				syslog(LOG_INFO, "ORCID iD stored/updated for user $username.");
 			}
 		
 			if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
@@ -570,12 +569,12 @@ class OpenIDHandler extends Handler
 					}
 
 
-					error_log("Orcid fields updated for entry $username");
+					syslog(LOG_INFO, "Orcid fields updated for entry $username");
 				}
 				
 
 				else {
-					error_log("Already stored an ORCID iD with a valid token for user $username, not overwriting.");
+					syslog(LOG_INFO, "Already stored an ORCID iD with a valid token for user $username, not overwriting.");
 				}
 				
 				$userDao->updateObject($user);
@@ -584,11 +583,11 @@ class OpenIDHandler extends Handler
 			
 			
 			else {
-				error_log("OpenIDHandler did not save additional ORCID data (token, scope, expiry). Fields empty!");
+				syslog(LOG_NOTICE, "OpenIDHandler did not save additional ORCID data (token, scope, expiry). Fields empty!");
 			}
 		}
 		else{
-			error_log("INFO: ORCID iD was empty for user $username! This is intended if the Orcid Header is not configured or user has not connected their ORCID iD within Shibboleth Application.");
+			syslog(LOG_NOTICE, "ORCID iD was empty for user $username! This is intended if the Orcid Header is not configured or user has not connected their ORCID iD within Shibboleth Application.");
 		}
 	}
 	
