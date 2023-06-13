@@ -144,12 +144,24 @@ class OpenIDHandler extends Handler
 			$userEmail = $_SERVER[$emailHeader];
 			$userGivenName = $_SERVER[$givenNameHeader];
 			$userFamilyName = $_SERVER[$familyNameHeader];
-			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : '';
-			$userAccessToken = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : '';
+			$userOrcidUrl = (!empty($orcidHeader) && isset($_SERVER[$orcidHeader]))? $_SERVER[$orcidHeader] : null;
 			
-			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN, change to ORCID iD if it was set in the headers
+			// extract the data from the Access Token Attribute if present
+			$userAccessData = (!empty($accessTokenHeader) && isset($_SERVER[$accessTokenHeader]))? $_SERVER[$accessTokenHeader] : null;
+			$userAccessToken = null;
+			$userAccessScope = null;
+			$userAccessExpiresOn = null;
 			
-			// TODO replace the placeholders by values from userAccessToken
+			if(isset($userAccessData)){
+				$extractedAccessData = self::extractShibTokenData($userAccessData);
+				$userAccessToken = $extractedAccessData['token'];
+				$userAccessExpiresOn = $extractedAccessData['expires'];
+				$userAccessScope = $extractedAccessData['scope'];
+			}
+			
+			$providerSettingsId = $uin; // the value that will go into openid::shibboleth, default = UIN
+			
+			// prepare payload for shibboleth
 			$tokenPayload = [
 				'selectedProvider' => $selectedProvider,
 				'id' => $providerSettingsId,
@@ -159,12 +171,11 @@ class OpenIDHandler extends Handler
 				'family_name' => isset($userFamilyName) ? $userFamilyName : null,
 				'email_verified' => null,
 				'orcid' =>  isset($userOrcidUrl) ? $userOrcidUrl : null,
-				'access_token' => null,
-				'scope' => 'null',
-				'expires_in' => ' 631139040',
+				'access_token' => isset($userAccessToken) ? $userAccessToken : null,
+				'scope' => isset($userAccessScope) ? $userAccessScope : null,
+				'expires_in' => isset($userAccessExpiresOn) ? $userAccessExpiresOn : null,
 			];
-			
-			
+		
 		}
 		
 
@@ -666,6 +677,23 @@ class OpenIDHandler extends Handler
 		else{
 			syslog(LOG_NOTICE, "ORCID iD was empty for user $username! This is intended if the Orcid Header is not configured or user has not connected their ORCID iD within Shibboleth Application.");
 		}
+	}
+	
+	/**
+	* Helper function to ectract data from the Shib AccessToken Header
+	*/
+	public static function extractShibTokenData($accessTokenData){
+		$splitVals = explode('$', $accessTokenData);
+		$token = $splitVals[0];
+		$expiration = $splitVals[1];
+		$scope = $splitVals[2];
+		
+		$extractedData = [
+							'token' => $token, 
+							'expires' => $expiration, 
+							'scope' => $scope
+						];
+		return $extractedData;
 	}
 	
 }
