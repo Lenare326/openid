@@ -624,8 +624,13 @@ class OpenIDHandler extends Handler
 			}
 		
 			if(!empty($userAccessToken) && !empty($userOrcidScope) && !empty($accessTokenExpiration)) {	
-				// convert expiration date (delivered with oauth) to date in format yyyy-mm-dd
-				$accessTokenExpiration=Date('Y-m-d', strtotime('+'.$accessTokenExpiration. 'seconds'));
+				// convert expiration date to date in format yyyy-mm-dd
+				// date from shib does not need to be converted
+				// only Orcid sign-in needs conversion as it delivers date in seconds
+				if(	preg_match("/^[1-9].[0-9]*$/",$accessTokenExpiration)){
+					$accessTokenExpiration=Date('Y-m-d', strtotime('+'.$accessTokenExpiration. 'seconds'));
+				}
+
 
 				// try get stored token expiration date from DB for comparison
 				$storedExpDate = $user->getData('orcidAccessExpiresOn');
